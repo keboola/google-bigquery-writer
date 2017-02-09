@@ -1,9 +1,12 @@
 import sys
 import traceback
 from google_bigquery_extractor.exceptions import UserException, ApplicationException
+from google_bigquery_extractor.app import App
 
 try:
-    print('test')
+    application = App(data_dir='/data')
+    application.run()
+    sys.exit(0)
 except UserException as err:
     message = 'User exception: %s' % err
     print(message, file=sys.stderr)
