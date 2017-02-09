@@ -1,8 +1,9 @@
 import pytest
 from google_bigquery_extractor import app, exceptions
 
-class TestGoogleBigQueryWriter():
-    
+
+class TestApp():
+
     def test_empty_config(self, data_dir):
         application = app.App(data_dir + "empty_config/")
         try:

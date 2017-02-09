@@ -1,8 +1,9 @@
 from google_bigquery_extractor import schema_mapper
 from google.cloud import bigquery
 
+
 class TestSchema(object):
-    
+
     def test_get_schema_field(self):
         column_definition = {'dbName': 'test', 'type': 'STRING'}
         schema_field = schema_mapper.get_schema_field(column_definition)
@@ -18,6 +19,3 @@ class TestSchema(object):
         }
         table_schema = schema_mapper.get_schema(table_definition)
         assert len(table_schema) == 2
-
-
-    
