@@ -1,5 +1,3 @@
-import os
-import csv
 import pytest
 from google_bigquery_extractor import app, exceptions
 
