@@ -6,6 +6,7 @@ import google.cloud.bigquery
 import google.oauth2.credentials
 import os
 
+
 class TestWriter(object):
 
     def get_client(self):
@@ -32,16 +33,14 @@ class TestWriter(object):
                 table_obj = dataset.table(table.name)
                 table_obj.delete()
             dataset.delete()
-
-    def teardown(self):
-        self.delete_dataset()
-
-    def setup(self):
-        self.delete_dataset()
-        client = self.get_client()
-        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
         if dataset.exists():
-            pytest.fail('Dataset still exists')
+            pytest.fail('Could not delete dataset')
+
+    def teardown_method(self):
+        self.delete_dataset()
+
+    def setup_method(self):
+        self.delete_dataset()
 
     def test_missing_credentials(self):
         try:
@@ -79,8 +78,6 @@ class TestWriter(object):
             pass
 
     def test_valid_token(self, data_dir):
-        self.setup()
-
         credentials = google.oauth2.credentials.Credentials(
             os.environ.get('OAUTH_ACCESS_TOKEN'),
             token_uri=os.environ.get('OAUTH_TOKEN_URI'),
@@ -103,8 +100,6 @@ class TestWriter(object):
             os.environ.get('BIGQUERY_TABLE'),
             schema
         )
-        self.teardown()
-
 
 '''
     def test_write_table(self, data_dir):
