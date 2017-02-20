@@ -2,11 +2,47 @@ import csv
 import pytest
 from google_bigquery_extractor import writer, exceptions
 from google.cloud import bigquery
+import google.cloud.bigquery
 import google.oauth2.credentials
 import os
 
 
 class TestWriter(object):
+
+    def get_client(self):
+        credentials = google.oauth2.credentials.Credentials(
+            os.environ.get('OAUTH_ACCESS_TOKEN'),
+            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
+            client_id=os.environ.get('OAUTH_CLIENT_ID'),
+            client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
+            refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')
+        )
+        client = bigquery.Client(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=credentials
+        )
+        return client
+
+    def delete_dataset(self):
+        client = self.get_client()
+        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        if dataset.exists():
+            tables = dataset.list_tables()
+            print(tables)
+            for table in dataset.list_tables():
+                table_obj = dataset.table(table.name)
+                table_obj.delete()
+            dataset.delete()
+
+    def teardown(self):
+        self.delete_dataset()
+
+    def setup(self):
+        self.delete_dataset()
+        client = self.get_client()
+        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        if dataset.exists():
+            pytest.fail('Dataset still exists')
 
     def test_missing_credentials(self):
         try:
@@ -44,6 +80,8 @@ class TestWriter(object):
             pass
 
     def test_valid_token(self, data_dir):
+        self.setup()
+
         credentials = google.oauth2.credentials.Credentials(
             os.environ.get('OAUTH_ACCESS_TOKEN'),
             token_uri=os.environ.get('OAUTH_TOKEN_URI'),
@@ -66,6 +104,7 @@ class TestWriter(object):
             os.environ.get('BIGQUERY_TABLE'),
             schema
         )
+        self.teardown()
 
 
 '''
