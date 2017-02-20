@@ -1,11 +1,10 @@
 import csv
 import pytest
-from google_bigquery_extractor import writer, exceptions
+from google_bigquery_writer import writer, exceptions
 from google.cloud import bigquery
 import google.cloud.bigquery
 import google.oauth2.credentials
 import os
-
 
 class TestWriter(object):
 

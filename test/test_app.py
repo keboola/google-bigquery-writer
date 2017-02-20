@@ -1,5 +1,5 @@
 import pytest
-from google_bigquery_extractor import app, exceptions
+from google_bigquery_writer import app, exceptions
 
 
 class TestApp():

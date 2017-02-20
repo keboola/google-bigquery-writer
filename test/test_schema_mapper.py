@@ -1,4 +1,4 @@
-from google_bigquery_extractor import schema_mapper
+from google_bigquery_writer import schema_mapper
 from google.cloud import bigquery
 
 

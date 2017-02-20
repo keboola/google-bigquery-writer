@@ -1,7 +1,7 @@
 import sys
 import traceback
-from google_bigquery_extractor.exceptions import UserException, ApplicationException
-from google_bigquery_extractor.app import App
+from google_bigquery_writer.exceptions import UserException, ApplicationException
+from google_bigquery_writer.app import App
 
 try:
     application = App(data_dir='/data')

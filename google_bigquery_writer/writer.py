@@ -1,6 +1,6 @@
 from google.cloud import bigquery
 from google.auth import exceptions
-from google_bigquery_extractor.exceptions import UserException
+from google_bigquery_writer.exceptions import UserException
 
 
 class Writer(object):
