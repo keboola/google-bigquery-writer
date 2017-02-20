@@ -12,12 +12,20 @@ class Writer(object):
 
     def write_table(self, csv_file, dataset_name, table_name, columns_schema):
         dataset = self.client.dataset(dataset_name)
-        if not dataset.exists():
-            dataset.create()
-
+        try:
+            if not dataset.exists():
+                dataset.create()
+        except exceptions.RefreshError as err:
+            message = 'Cannot connect to BigQuery.' \
+                ' Check your access token or refresh token.'
+            raise UserException(message)
         table = dataset.table(table_name, columns_schema)
         if not table.exists():
             table.create()
 
         with open(csv_file.name, 'rb') as readable:
-            table.upload_from_file(readable, source_format='CSV', skip_leading_rows=1)
+            table.upload_from_file(
+                readable,
+                source_format='CSV',
+                skip_leading_rows=1
+            )

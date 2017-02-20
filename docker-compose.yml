@@ -7,5 +7,14 @@ services:
     stdin_open: true  
     image: keboola/google-bigquery-writer
     command: sh -c '/home/tests.sh'
+    environment:
+      - OAUTH_ACCESS_TOKEN
+      - OAUTH_TOKEN_URI
+      - OAUTH_CLIENT_ID
+      - OAUTH_CLIENT_SECRET
+      - OAUTH_REFRESH_TOKEN
+      - BIGQUERY_PROJECT
+      - BIGQUERY_DATASET
+      - BIGQUERY_TABLE
     volumes:
       - ./:/home

@@ -1,11 +1,9 @@
 import csv
 import pytest
-import google_auth_httplib2
-import google.auth.credentials
-import oauth2client.client
 from google_bigquery_extractor import writer, exceptions
 from google.cloud import bigquery
-from google import auth
+import google.oauth2.credentials
+import os
 
 
 class TestWriter(object):
@@ -13,23 +11,71 @@ class TestWriter(object):
     def test_missing_credentials(self):
         try:
             writer.Writer()
-            pytest.fail("Must raise exception.")
+            pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert str(err) == "Cannot connect to BigQuery"
+            assert str(err) == 'Cannot connect to BigQuery'
             pass
 
-    def test_invalid_token(self):
-        credentials = oauth2client.client.GoogleCredentials('mytoken', 'client_id', 'client_secret', 'refresh_token', 'expiry', 'token_uri', 'user_agent')
-        writer.Writer(project='big-silo-88312', credentials=credentials)
+    def test_invalid_token(self, data_dir):
+        credentials = google.oauth2.credentials.Credentials(
+            'access_token',
+            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
+            client_id=os.environ.get('OAUTH_CLIENT_ID'),
+            client_secret=os.environ.get('OAUTH_CLIENT_SECRET')
+        )
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=credentials
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'STRING'),
+            bigquery.schema.SchemaField('col2', 'INTEGER')
+        ]
+        try:
+            my_writer.write_table(
+                csv_file,
+                os.environ.get('BIGQUERY_DATASET'),
+                os.environ.get('BIGQUERY_TABLE'),
+                schema)
+        except exceptions.UserException as err:
+            assert str(err) == 'Cannot connect to BigQuery.' \
+                ' Check your access token or refresh token.'
+            pass
+
+    def test_valid_token(self, data_dir):
+        credentials = google.oauth2.credentials.Credentials(
+            os.environ.get('OAUTH_ACCESS_TOKEN'),
+            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
+            client_id=os.environ.get('OAUTH_CLIENT_ID'),
+            client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
+            refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')
+        )
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=credentials
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'STRING'),
+            bigquery.schema.SchemaField('col2', 'INTEGER')
+        ]
+        my_writer.write_table(
+            csv_file,
+            os.environ.get('BIGQUERY_DATASET'),
+            os.environ.get('BIGQUERY_TABLE'),
+            schema
+        )
+
 
 '''
     def test_write_table(self, data_dir):
         credentials = oauth2client.client.AccessTokenCredentials('mytoken', 'KBC Test')
-        my_writer = writer.Writer(project='big-silo-88312')
+        my_writer = writer.Writer(project=os.environ.get('BIGQUERY_PROJECT'))
         csv_file = open(data_dir + 'simple_csv/in/tables/file.csv')
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
-        my_writer.write_table(csv_file, 'my_dataset', 'my_table', schema)
+        my_writer.write_table(csv_file, os.environ.get('BIGQUERY_DATASET'), os.environ.get('BIGQUERY_TABLE'), schema)
 '''
