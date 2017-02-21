@@ -3,9 +3,6 @@ services:
   tests:
     build: .
     image: keboola/google-bigquery-writer
-    tty: true
-    stdin_open: true  
-    image: keboola/google-bigquery-writer
     command: sh -c '/home/tests.sh'
     environment:
       - OAUTH_ACCESS_TOKEN
