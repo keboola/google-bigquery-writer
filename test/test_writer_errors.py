@@ -36,10 +36,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             credentials=credentials
         )
         csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('col1', 'STRING'),
-            bigquery.schema.SchemaField('col2', 'INTEGER')
-        ]
+        schema = []
         try:
             my_writer.write_table(
                 csv_file,
@@ -71,6 +68,51 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Too many values in row' in str(err)
+            pass
+
+    def test_write_table_sync_error_missing_values(self, data_dir):
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=self.get_credentials()
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('column_unknown1', 'INTEGER'),
+            bigquery.schema.SchemaField('column_unknown2', 'INTEGER'),
+            bigquery.schema.SchemaField('column_unknown3', 'INTEGER')
+        ]
+        try:
+            my_writer.write_table_sync(
+                csv_file,
+                os.environ.get('BIGQUERY_DATASET'),
+                os.environ.get('BIGQUERY_TABLE'),
+                schema
+            )
+            pytest.fail('Must raise exception.')
+        except exceptions.UserException as err:
+            assert 'contains only 2 columns' in str(err)
+            pass
+
+    def test_write_table_sync_error_invalid_datatype(self, data_dir):
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=self.get_credentials()
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'INTEGER'),
+            bigquery.schema.SchemaField('col2', 'INTEGER'),
+        ]
+        try:
+            my_writer.write_table_sync(
+                csv_file,
+                os.environ.get('BIGQUERY_DATASET'),
+                os.environ.get('BIGQUERY_TABLE'),
+                schema
+            )
+            pytest.fail('Must raise exception.')
+        except exceptions.UserException as err:
+            assert 'Could not parse \'val1\' as int for field col1' in str(err)
             pass
 
     def test_create_dataset_invalid_name(self, data_dir):

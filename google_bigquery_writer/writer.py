@@ -65,7 +65,6 @@ class Writer(object):
                 'seconds' % (dataset_name, table_name, round(sleep_runsum))
             raise UserException(message)
         if job.errors:
-            print(job.errors)
             first_error = job.errors.pop()
             message = 'Loading data into table %s.%s failed: %s' % (
                 dataset_name,
