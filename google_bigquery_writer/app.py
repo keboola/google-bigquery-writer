@@ -2,6 +2,7 @@
 from keboola import docker
 from google_bigquery_writer.exceptions import UserException
 
+
 class App:
     def __init__(self, data_dir=None):
         self.data_dir = data_dir

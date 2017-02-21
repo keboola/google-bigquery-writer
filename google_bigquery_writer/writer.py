@@ -2,6 +2,7 @@ from google.cloud import bigquery
 from google.auth import exceptions
 from google_bigquery_writer.exceptions import UserException
 import time
+import google.cloud.exceptions
 
 class Writer(object):
     def __init__(self, project=None, credentials=None):
@@ -19,10 +20,22 @@ class Writer(object):
             message = 'Cannot connect to BigQuery.' \
                 ' Check your access token or refresh token.'
             raise UserException(message)
+        except google.cloud.exceptions.BadRequest as err:
+            message = 'Cannot create dataset %s: %s' % (
+                dataset_name,
+                str(err)
+            )
+            raise UserException(message)
         table = dataset.table(table_name, columns_schema)
-        if not table.exists():
-            table.create()
-
+        try:
+            if not table.exists():
+                table.create()
+        except google.cloud.exceptions.BadRequest as err:
+            message = 'Cannot create table %s: %s' % (
+                table_name,
+                str(err)
+            )
+            raise UserException(message)
         with open(csv_file.name, 'rb') as readable:
             job = table.upload_from_file(
                 readable,
@@ -42,11 +55,21 @@ class Writer(object):
         retry_count = 0
         sleep_runsum = 0
         while retry_count < polling_max_retries and job.state != u'DONE':
-            time.sleep(1.5**retry_count)
-            sleep_runsum += 1.5**retry_count
+            sleep_time = 1.5**retry_count
+            time.sleep(sleep_time)
+            sleep_runsum += sleep_time
             retry_count += 1
             job.reload()
         if job.state != u'DONE':
             message = 'Loading data into table %s.%s didn\'t finish in %s ' \
                 'seconds' % (dataset_name, table_name, round(sleep_runsum))
+            raise UserException(message)
+        if job.errors:
+            print(job.errors)
+            first_error = job.errors.pop()
+            message = 'Loading data into table %s.%s failed: %s' % (
+                dataset_name,
+                table_name,
+                first_error['message']
+            )
             raise UserException(message)
