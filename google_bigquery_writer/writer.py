@@ -11,7 +11,9 @@ class Writer(object):
         except exceptions.DefaultCredentialsError as err:
             raise UserException('Cannot connect to BigQuery')
 
-    def write_table(self, csv_file, dataset_name, table_name, columns_schema):
+    def write_table(self, csv_file, dataset_name, table_name, columns_schema,
+                    incremental=False
+                    ):
         dataset = self.client.dataset(dataset_name)
         try:
             if not dataset.exists():
@@ -28,6 +30,8 @@ class Writer(object):
             raise UserException(message)
         table = dataset.table(table_name, columns_schema)
         try:
+            if not incremental and table.exists():
+                table.delete()
             if not table.exists():
                 table.create()
         except google.cloud.exceptions.BadRequest as err:
@@ -45,12 +49,13 @@ class Writer(object):
             return job
 
     def write_table_sync(self, csv_file, dataset_name, table_name,
-                         columns_schema, polling_max_retries=10):
+                         columns_schema, incremental=False, polling_max_retries=10):
         job = self.write_table(
             csv_file,
             dataset_name,
             table_name,
-            columns_schema
+            columns_schema,
+            incremental=incremental
         )
         retry_count = 0
         sleep_runsum = 0
