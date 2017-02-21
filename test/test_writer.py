@@ -95,6 +95,32 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[0] == ('val1', 1)
         assert row_data[1] == ('val2', 2)
 
-
-    # def test_write_table_schema:
-
+    def test_write_table_schema(self, data_dir):
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=self.get_credentials()
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'STRING'),
+            bigquery.schema.SchemaField('col2', 'INTEGER')
+        ]
+        my_writer.write_table_sync(
+            csv_file,
+            os.environ.get('BIGQUERY_DATASET'),
+            os.environ.get('BIGQUERY_TABLE'),
+            schema
+        )
+        client = self.get_client()
+        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        table = dataset.table(os.environ.get('BIGQUERY_TABLE'))
+        table.reload()
+        rcvd_schema = table.schema
+        assert rcvd_schema[0].field_type == 'STRING'
+        assert rcvd_schema[0].fields is None
+        assert rcvd_schema[0].mode == 'NULLABLE'
+        assert rcvd_schema[0].name == 'col1'
+        assert rcvd_schema[1].field_type == 'INTEGER'
+        assert rcvd_schema[1].fields is None
+        assert rcvd_schema[1].mode == 'NULLABLE'
+        assert rcvd_schema[1].name == 'col2'
