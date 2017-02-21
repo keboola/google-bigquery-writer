@@ -7,7 +7,7 @@ class TestSchema(object):
     def test_get_schema_field(self):
         column_definition = {'dbName': 'test', 'type': 'STRING'}
         schema_field = schema_mapper.get_schema_field(column_definition)
-        expected = bigquery.schema.SchemaField('test', 'STRING')
+        expected = bigquery.schema.SchemaField('test', 'STRING', mode='NULLABLE')
         assert schema_field == expected
 
     def test_get_schema(self):
