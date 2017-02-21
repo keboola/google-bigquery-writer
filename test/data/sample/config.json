@@ -1,0 +1,139 @@
+{
+    "parameters": {
+        "db": {
+            "project": "sample-project",
+            "dataset": "sample-schema"
+        },
+        "tables": [
+            {
+                "dbName": "table1",
+                "export": true,
+                "tableId": "in.c-bucket.table1",
+                "items": [
+                    {
+                        "name": "string",
+                        "dbName": "string",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "integer",
+                        "dbName": "integer",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "name": "float",
+                        "dbName": "float",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "boolean",
+                        "dbName": "boolean",
+                        "type": "BOOLEAN"
+                    },
+                    {
+                        "name": "timestamp",
+                        "dbName": "timestamp",
+                        "type": "TIMESTAMP"
+                    }                                                                                                                            
+                ]
+            },
+            {
+                "dbName": "table2",
+                "export": true,
+                "tableId": "in.c-bucket.table2",
+                "items": [
+                    {
+                        "name": "string",
+                        "dbName": "string",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "integer",
+                        "dbName": "integer",
+                        "type": "INTEGER"
+                    },
+                    {
+                        "name": "float",
+                        "dbName": "float",
+                        "type": "FLOAT"
+                    },
+                    {
+                        "name": "boolean",
+                        "dbName": "boolean",
+                        "type": "BOOLEAN"
+                    },
+                    {
+                        "name": "timestamp",
+                        "dbName": "timestamp",
+                        "type": "TIMESTAMP"
+                    }                                                               
+                ]
+            },
+            {
+                "dbName": "table3",
+                "export": false,
+                "tableId": "in.c-bucket.table3",
+                "items": [
+                    {
+                        "name": "string",
+                        "dbName": "string",
+                        "type": "STRING",
+                        "nullable": true
+                    },
+                    {
+                        "name": "integer",
+                        "dbName": "integer",
+                        "type": "INTEGER",
+                        "nullable": true
+                    },
+                    {
+                        "name": "float",
+                        "dbName": "float",
+                        "type": "FLOAT",
+                        "nullable": true
+                    },
+                    {
+                        "name": "boolean",
+                        "dbName": "boolean",
+                        "type": "BOOLEAN",
+                        "nullable": true
+                    },
+                    {
+                        "name": "timestamp",
+                        "dbName": "timestamp",
+                        "type": "TIMESTAMP",
+                        "nullable": true
+                    }                                                               
+                ]
+            }            
+        ]
+    },
+    "storage": {
+        "input": {
+            "tables": [
+                {
+                    "source": "in.c-bucket.table1",
+                    "destination": "in.c-bucket.table1.csv",
+                    "columns": [
+                        "string",
+                        "integer",
+                        "float",
+                        "boolean",
+                        "timestamp"
+                    ]
+                },
+                {
+                    "source": "in.c-bucket.table2",
+                    "destination": "in.c-bucket.table2.csv",
+                    "columns": [
+                        "string",
+                        "integer",
+                        "float",
+                        "boolean",
+                        "timestamp"
+                    ]
+                }
+            ]
+        }
+    }
+}
