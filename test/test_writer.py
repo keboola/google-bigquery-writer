@@ -10,18 +10,19 @@ import sys
 class TestWriter(object):
 
     def get_client(self):
-        credentials = google.oauth2.credentials.Credentials(
+        return bigquery.Client(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=self.get_credentials()
+        )
+
+    def get_credentials(self): 
+        return google.oauth2.credentials.Credentials(
             os.environ.get('OAUTH_ACCESS_TOKEN'),
             token_uri=os.environ.get('OAUTH_TOKEN_URI'),
             client_id=os.environ.get('OAUTH_CLIENT_ID'),
             client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
             refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')
         )
-        client = bigquery.Client(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=credentials
-        )
-        return client
 
     def delete_dataset(self):
         client = self.get_client()
@@ -78,16 +79,9 @@ class TestWriter(object):
             pass
 
     def test_write_table_async(self, data_dir):
-        credentials = google.oauth2.credentials.Credentials(
-            os.environ.get('OAUTH_ACCESS_TOKEN'),
-            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
-            client_id=os.environ.get('OAUTH_CLIENT_ID'),
-            client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
-            refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')
-        )
         my_writer = writer.Writer(
             project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=credentials
+            credentials=self.get_credentials()
         )
         csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
         schema = [
@@ -108,16 +102,9 @@ class TestWriter(object):
         assert table.exists()
 
     def test_write_table_sync(self, data_dir):
-        credentials = google.oauth2.credentials.Credentials(
-            os.environ.get('OAUTH_ACCESS_TOKEN'),
-            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
-            client_id=os.environ.get('OAUTH_CLIENT_ID'),
-            client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
-            refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')
-        )
         my_writer = writer.Writer(
             project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=credentials
+            credentials=self.get_credentials()
         )
         csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
         schema = [
