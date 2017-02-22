@@ -4,6 +4,7 @@ from google_bigquery_writer.exceptions import UserException
 import time
 import google.cloud.exceptions
 
+
 class Writer(object):
     def __init__(self, project=None, credentials=None):
         try:
@@ -14,6 +15,12 @@ class Writer(object):
     def write_table(self, csv_file, dataset_name, table_name, columns_schema,
                     incremental=False
                     ):
+        if dataset_name == '' or dataset_name is None:
+            raise UserException('Dataset name not specified.')
+        if table_name == '' or table_name is None:
+            raise UserException('Table name not specified.')
+        if columns_schema is None or len(columns_schema) == 0:
+            raise UserException('Columns schema not specified.')
         dataset = self.client.dataset(dataset_name)
         try:
             if not dataset.exists():
