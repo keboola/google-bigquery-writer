@@ -39,6 +39,7 @@
                 "dbName": "table2",
                 "export": true,
                 "tableId": "in.c-bucket.table2",
+                "incremental": true,
                 "items": [
                     {
                         "name": "string",
