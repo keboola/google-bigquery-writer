@@ -7,13 +7,13 @@ services:
 
 before_install:
   - docker-compose -v
-  - docker-compose build
+  - docker-compose build 
 
 script:
   - docker-compose run --rm tests
 
 after_success:
-  - docker-compose run --rm tests codeclimate-test-reporter --file .coverage
+  - docker-compose run --rm codeclimate-test-reporter
   - docker images
 
 deploy:
