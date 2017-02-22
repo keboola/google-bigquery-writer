@@ -14,3 +14,11 @@ services:
       - BIGQUERY_TABLE
     volumes:
       - ./:/home
+  codeclimate-test-reporter:
+    build: .
+    image: keboola/google-bigquery-writer
+    command: sh -c 'pip install codeclimate-test-reporter && codeclimate-test-reporter --file .coverage'
+    environment:
+      - CODECLIMATE_REPO_TOKEN
+    volumes:
+      - ./:/home      
