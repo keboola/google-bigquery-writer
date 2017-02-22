@@ -17,7 +17,8 @@ class TestApp(GoogleBigQueryWriterTest):
         self.delete_dataset()
 
     def test_successful_run(self, data_dir):
-        shutil.rmtree(data_dir + "sample_populated/")
+        if os.path.exists(data_dir + "sample_populated"):
+            shutil.rmtree(data_dir + "sample_populated")
 
         # populate config file
         source_config_file_path = data_dir + "sample/config.json"
