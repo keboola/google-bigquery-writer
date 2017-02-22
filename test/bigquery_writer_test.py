@@ -14,7 +14,7 @@ class GoogleBigQueryWriterTest(object):
     def get_credentials(self): 
         return google.oauth2.credentials.Credentials(
             os.environ.get('OAUTH_ACCESS_TOKEN'),
-            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
+            token_uri='https://accounts.google.com/o/oauth2/token',
             client_id=os.environ.get('OAUTH_CLIENT_ID'),
             client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
             refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')

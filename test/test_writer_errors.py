@@ -27,7 +27,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
     def test_invalid_token(self, data_dir):
         credentials = google.oauth2.credentials.Credentials(
             'access_token',
-            token_uri=os.environ.get('OAUTH_TOKEN_URI'),
+            token_uri='https://accounts.google.com/o/oauth2/token',
             client_id=os.environ.get('OAUTH_CLIENT_ID'),
             client_secret=os.environ.get('OAUTH_CLIENT_SECRET')
         )
