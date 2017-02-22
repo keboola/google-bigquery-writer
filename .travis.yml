@@ -1,0 +1,26 @@
+sudo: required
+
+language: bash
+
+services:
+  - docker
+
+before_install:
+  - docker-compose -v
+  - docker-compose build
+
+script:
+  - docker-compose run --rm tests
+
+after_success:
+  - docker images
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: ./deploy.sh
+  on:
+    tags: true
+
+notifications:
+  slack: keboola:hDCSoKFw77r0k7cJ8LkzoK5p
