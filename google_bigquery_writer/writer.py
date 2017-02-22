@@ -7,10 +7,7 @@ import google.cloud.exceptions
 
 class Writer(object):
     def __init__(self, project=None, credentials=None):
-        try:
-            self.client = bigquery.Client(project, credentials)
-        except exceptions.DefaultCredentialsError as err:
-            raise UserException('Cannot connect to BigQuery')
+        self.client = bigquery.Client(project, credentials)
 
     def write_table(self, csv_file, dataset_name, table_name, columns_schema,
                     incremental=False

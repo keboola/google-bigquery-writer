@@ -17,14 +17,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
     def setup_method(self):
         self.delete_dataset()
 
-    def test_missing_credentials(self):
-        try:
-            writer.Writer()
-            pytest.fail('Must raise exception.')
-        except exceptions.UserException as err:
-            assert str(err) == 'Cannot connect to BigQuery'
-            pass
-
     def test_invalid_token(self, data_dir):
         credentials = google.oauth2.credentials.Credentials(
             'access_token',
@@ -50,7 +42,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert str(err) == 'Cannot connect to BigQuery.' \
                 ' Check your access token or refresh token.'
-            pass
 
     def test_write_table_sync_error_too_many_values(self, data_dir):
         my_writer = writer.Writer(
@@ -71,7 +62,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Too many values in row' in str(err)
-            pass
 
     def test_write_table_sync_error_missing_values(self, data_dir):
         my_writer = writer.Writer(
@@ -94,7 +84,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'contains only 2 columns' in str(err)
-            pass
 
     def test_write_table_sync_error_invalid_datatype(self, data_dir):
         my_writer = writer.Writer(
@@ -116,7 +105,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Could not parse \'val1\' as int for field col1' in str(err)
-            pass
 
     def test_create_dataset_invalid_name(self, data_dir):
         my_writer = writer.Writer(
@@ -137,7 +125,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Cannot create dataset' in str(err)
-            pass
 
     def test_create_table_invalid_name(self, data_dir):
         my_writer = writer.Writer(
@@ -158,7 +145,6 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Cannot create table' in str(err)
-            pass
 
     def test_create_table_invalid_schema_datatype(self, data_dir):
         my_writer = writer.Writer(
@@ -179,4 +165,3 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'ANYTHING is not a valid value' in str(err)
-            pass
