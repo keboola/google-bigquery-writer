@@ -8,6 +8,7 @@ import os
 import sys
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
 
+
 class TestWriter(GoogleBigQueryWriterTest):
 
     def teardown_method(self):
