@@ -5,7 +5,8 @@ RUN pip install --no-cache-dir --ignore-installed \
 		pytest \
         pytest-cov \
         google-cloud-bigquery \
-        oauth2client
+        oauth2client \
+        codeclimate-test-reporter
 
 RUN pip install --upgrade --no-cache-dir --ignore-installed --cert=/tmp/cacert.pem git+git://github.com/keboola/python-docker-application.git@1.3.0
 
