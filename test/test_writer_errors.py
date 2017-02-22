@@ -36,7 +36,9 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             credentials=credentials
         )
         csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = []
+        schema = [
+            bigquery.schema.SchemaField('dummy', 'INTEGER')
+        ]
         try:
             my_writer.write_table(
                 csv_file,
@@ -121,7 +123,9 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             credentials=self.get_credentials()
         )
         csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = []
+        schema = [
+            bigquery.schema.SchemaField('dummy', 'INTEGER')
+        ]
         try:
             my_writer.write_table_sync(
                 csv_file,
