@@ -1,4 +1,4 @@
- "string","integer","float","boolean","timestamp"
- "MYString",123456,123.456,1,"2014-08-19 12:41:35.220"
- "",0,0,0,""
- ,,,,
+"string","integer","float","boolean","timestamp"
+"MYString",123456,123.456,1,"2014-08-19 12:41:35.220"
+"",0,0,0,""
+,,,,

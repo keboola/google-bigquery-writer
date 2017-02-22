@@ -1,9 +1,7 @@
 {
     "parameters": {
-        "db": {
-            "project": "sample-project",
-            "dataset": "sample-schema"
-        },
+        "project": "sample-project",
+        "dataset": "sample-schema",
         "tables": [
             {
                 "dbName": "table1",
