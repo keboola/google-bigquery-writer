@@ -53,7 +53,8 @@ class Writer(object):
             return job
 
     def write_table_sync(self, csv_file, dataset_name, table_name,
-                         columns_schema, incremental=False, polling_max_retries=10):
+                         columns_schema, incremental=False,
+                         polling_max_retries=10):
         job = self.write_table(
             csv_file,
             dataset_name,
