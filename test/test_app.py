@@ -80,16 +80,23 @@ class TestApp(GoogleBigQueryWriterTest):
 
         client = self.get_client()
 
+        # check for only the testing dataset
         datasets = list(client.list_datasets())
-        assert len(datasets) == 1
-        assert datasets[0].name == os.environ.get('BIGQUERY_DATASET')
+        assert len(datasets) >= 1
+        # todo find the required dataset
+        matching_datasets = list(filter(
+            lambda dataset: dataset.name == os.environ.get('BIGQUERY_DATASET'), datasets
+        ))
 
-        tables = list(datasets[0].list_tables())
+        assert len(matching_datasets) == 1
+        assert matching_datasets[0].name == os.environ.get('BIGQUERY_DATASET')
+
+        tables = list(matching_datasets[0].list_tables())
         assert len(tables) == 2
         assert tables[0].name == 'table1'
         assert tables[1].name == 'table2'
 
-        table = datasets[0].table('table1')
+        table = matching_datasets[0].table('table1')
         table.reload()
         rcvd_schema = table.schema
         assert rcvd_schema[0].field_type == 'STRING'
