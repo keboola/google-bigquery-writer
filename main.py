@@ -13,7 +13,6 @@ def main(args):
     except UserException as err:
         message = 'User exception: %s' % err
         print(message, file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
     except ApplicationException as err:
         message = 'Application exception: %s' % err
