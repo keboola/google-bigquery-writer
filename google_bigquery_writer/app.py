@@ -67,7 +67,7 @@ class App:
             if 'incremental' in table.keys():
                 incremental = table['incremental']
 
-            file_path = self.data_dir + 'in/tables/' + input_mapping['destination']
+            file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
             csv_file = open(file_path)
 
             self.get_writer().write_table_sync(
