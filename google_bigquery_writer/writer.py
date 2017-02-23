@@ -54,7 +54,8 @@ class Writer(object):
 
     def write_table_sync(self, csv_file, dataset_name, table_name,
                          columns_schema, incremental=False,
-                         polling_max_retries=10):
+                         polling_max_retries=360,
+                         polling_delay=5):
         job = self.write_table(
             csv_file,
             dataset_name,
@@ -65,14 +66,16 @@ class Writer(object):
         retry_count = 0
         sleep_runsum = 0
         while retry_count < polling_max_retries and job.state != u'DONE':
-            sleep_time = 1.5**retry_count
-            time.sleep(sleep_time)
-            sleep_runsum += sleep_time
+            time.sleep(polling_delay)
             retry_count += 1
             job.reload()
         if job.state != u'DONE':
             message = 'Loading data into table %s.%s didn\'t finish in %s ' \
-                'seconds' % (dataset_name, table_name, round(sleep_runsum))
+                'seconds' % (
+                    dataset_name,
+                    table_name,
+                    polling_delay*polling_max_retries
+                )
             raise UserException(message)
         if job.errors:
             first_error = job.errors.pop()
