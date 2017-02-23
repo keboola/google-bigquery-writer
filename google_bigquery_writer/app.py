@@ -69,7 +69,11 @@ class App:
 
             file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
             csv_file = open(file_path)
-
+            print('Loading table %s into BigQuery as %s.%s' % (
+                input_mapping['source'],
+                parameters.get('dataset'),
+                table['dbName']
+            ))
             self.get_writer().write_table_sync(
                 csv_file,
                 parameters.get('dataset'),
@@ -77,4 +81,5 @@ class App:
                 schema,
                 incremental=incremental
             )
+        print('BigQuery Writer finished')
 

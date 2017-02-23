@@ -16,7 +16,7 @@ class TestApp(GoogleBigQueryWriterTest):
     def setup_method(self):
         self.delete_dataset()
 
-    def test_successful_run(self, data_dir):
+    def test_successful_run(self, data_dir, capsys):
         if os.path.exists(data_dir + "sample_populated"):
             shutil.rmtree(data_dir + "sample_populated")
 
@@ -68,6 +68,16 @@ class TestApp(GoogleBigQueryWriterTest):
         application.run()
 
         # assertions
+        out, err = capsys.readouterr()
+        assert err == ''
+        assert out == 'Loading table in.c-bucket.table1 into BigQuery ' \
+            'as %s.table1\n' \
+            'Loading table in.c-bucket.table2 into BigQuery as %s.table2\n' \
+            'BigQuery Writer finished\n' % (
+                os.environ.get('BIGQUERY_DATASET'),
+                os.environ.get('BIGQUERY_DATASET')
+            )
+
         client = self.get_client()
 
         datasets = list(client.list_datasets())
@@ -150,3 +160,13 @@ class TestApp(GoogleBigQueryWriterTest):
         query_obj.run()
         (row_data, total_rows, page_token) = query_obj.fetch_data()
         assert total_rows == 6
+
+        out, err = capsys.readouterr()
+        assert err == ''
+        assert out == 'Loading table in.c-bucket.table1 into BigQuery ' \
+            'as %s.table1\n' \
+            'Loading table in.c-bucket.table2 into BigQuery as %s.table2\n' \
+            'BigQuery Writer finished\n' % (
+                os.environ.get('BIGQUERY_DATASET'),
+                os.environ.get('BIGQUERY_DATASET')
+            )
