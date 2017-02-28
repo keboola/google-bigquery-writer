@@ -165,3 +165,25 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'ANYTHING is not a valid value' in str(err)
+    
+    def test_invalid_project(self, data_dir):
+        my_writer = writer.Writer(
+            project='invalid-project',
+            credentials=self.get_credentials()
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'STRING'),
+            bigquery.schema.SchemaField('col2', 'INTEGER')
+        ]
+        try: 
+            job = my_writer.write_table_sync(
+                csv_file,
+                os.environ.get('BIGQUERY_DATASET'),
+                os.environ.get('BIGQUERY_TABLE'),
+                schema
+            )
+            pytest.fail('Must raise exception.')
+        except exceptions.UserException as err:
+            assert '404 Not found: Project invalid-project' in str(err)
+        

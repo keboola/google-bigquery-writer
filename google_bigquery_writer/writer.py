@@ -32,6 +32,13 @@ class Writer(object):
                 str(err)
             )
             raise UserException(message)
+        except google.cloud.exceptions.NotFound as err:
+            message = 'Cannot create dataset %s: %s' % (
+                dataset_name,
+                str(err)
+            )
+            raise UserException(message)
+
         table = dataset.table(table_name, columns_schema)
         try:
             if not incremental and table.exists():
