@@ -40,14 +40,14 @@ class App:
 
     def run(self):
         parameters = self.cfg.get_parameters()
-        action = parameters.get('action')
-        if action == 'run' or action is None:
+        action = self.cfg.get_action()
+        if action == 'run' or action is None or action == '':
             self.action_run()
             return
         if action == 'listProjects':
             self.action_list_projects()
             return
-        raise UserException('Action %s not defined' % action)
+        raise UserException('Action %s not defined' % (action))
 
     def action_run(self):
         # validate application parameters

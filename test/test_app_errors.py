@@ -23,3 +23,12 @@ class TestAppErrors():
             assert str(err) == "Missing input mapping for " \
                 "table in.c-main.table1."
             pass
+
+    def test_action_not_defined(self, data_dir):
+        application = app.App(data_dir + "invalid_action/")
+        try:
+            application.run()
+            pytest.fail("Must raise exception.")
+        except exceptions.UserException as err:
+            assert str(err) == "Action invalid not defined"
+            pass

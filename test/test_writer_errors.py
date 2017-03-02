@@ -165,7 +165,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'ANYTHING is not a valid value' in str(err)
-    
+
     def test_invalid_project(self, data_dir):
         my_writer = writer.Writer(
             project='invalid-project',
@@ -186,4 +186,3 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert '404 Not found: Project invalid-project' in str(err)
-        

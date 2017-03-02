@@ -46,7 +46,7 @@ class TestApp(GoogleBigQueryWriterTest):
 
         data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
         data['parameters']['dataset'] = os.environ.get('BIGQUERY_DATASET')
-        data['parameters']['action'] = action
+        data['action'] = action
 
         with open(dst_config_file_path, 'w+') as dst_config_file:
             json.dump(data, dst_config_file)
