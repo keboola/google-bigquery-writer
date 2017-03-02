@@ -101,16 +101,13 @@ class App:
             credentials=self.get_credentials(),
             project='dummy'
         )
-        try:
-            projects = list(client.list_projects())
-            print(json.dumps(
-                list(map(
-                    lambda project: {
-                        'id': project.project_id,
-                        'name': project.friendly_name
-                    }, projects))
-                )
+        projects = list(client.list_projects())
+        print(json.dumps(
+            list(map(
+                lambda project: {
+                    'id': project.project_id,
+                    'name': project.friendly_name
+                }, projects))
             )
-        except google.cloud.exceptions.Forbidden as err:
-            raise UserException(str(err))
+        )
         return projects
