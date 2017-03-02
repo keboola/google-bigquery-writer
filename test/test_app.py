@@ -192,3 +192,20 @@ class TestApp(GoogleBigQueryWriterTest):
             lambda project: project['id'],
             data
         )
+
+    def test_list_datasets(self, data_dir, capsys):
+        client = self.get_client()
+        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        dataset.create()
+
+        self.prepare(action="listDatasets", data_dir=data_dir)
+        application = app.App(data_dir + "sample_populated/")
+        application.run()
+        out, err = capsys.readouterr()
+        assert err == ''
+        data = json.loads(out)
+        assert 1 == len(data)
+        assert os.environ.get('BIGQUERY_DATASET') in map(
+            lambda dataset: dataset['id'],
+            data
+        )

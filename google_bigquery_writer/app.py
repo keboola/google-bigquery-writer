@@ -47,6 +47,9 @@ class App:
         if action == 'listProjects':
             self.action_list_projects()
             return
+        if action == 'listDatasets':
+            self.action_list_datasets()
+            return            
         raise UserException('Action %s not defined' % (action))
 
     def action_run(self):
@@ -110,4 +113,19 @@ class App:
                 }, projects))
             )
         )
-        return projects
+
+    def action_list_datasets(self):
+        parameters = self.cfg.get_parameters()
+        client = google.cloud.bigquery.client.Client(
+            credentials=self.get_credentials(),
+            project=parameters.get('project')
+        )
+        datasets = list(client.list_datasets())
+        print(json.dumps(
+            list(map(
+                lambda dataset: {
+                    'id': dataset.name,
+                    'name': dataset.name
+                }, datasets))
+            )
+        )
