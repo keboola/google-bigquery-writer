@@ -18,6 +18,9 @@ class Writer(object):
             raise UserException('Table name not specified.')
         if columns_schema is None or len(columns_schema) == 0:
             raise UserException('Columns schema not specified.')
+
+        # TODO list projects and validate, that the project exists
+
         dataset = self.client.dataset(dataset_name)
         try:
             if not dataset.exists():

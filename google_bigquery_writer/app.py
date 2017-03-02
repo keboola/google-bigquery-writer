@@ -13,13 +13,7 @@ class App:
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
 
-    def get_writer(self):
-        """
-        Late loading method
-        """
-        if self.writer:
-            return self.writer
-        parameters = self.cfg.get_parameters()
+    def get_credentials(self):
         oauthapi_data = self.cfg.get_oauthapi_data()
         credentials = google.oauth2.credentials.Credentials(
             oauthapi_data.get('access_token'),
@@ -28,17 +22,36 @@ class App:
             client_secret=self.cfg.get_oauthapi_appsecret(),
             refresh_token=oauthapi_data.get('refresh_token')
         )
+        return credentials
+
+    def get_writer(self):
+        """
+        Late loading method
+        """
+        if self.writer:
+            return self.writer
+        parameters = self.cfg.get_parameters()
         my_writer = google_bigquery_writer.writer.Writer(
             project=parameters.get('project'),
-            credentials=credentials
+            credentials=self.get_credentials()
         )
         self.writer = my_writer
         return self.writer
 
     def run(self):
+        parameters = self.cfg.get_parameters()
+        action = parameters.get('action')
+        if action == 'run' or action is None:
+            self.action_run()
+            return
+        if action == 'listProjects':
+            self.action_list_projects()
+            return
+        raise UserException('Action %s not defined' % action)
+
+    def action_run(self):
         # validate application parameters
         parameters = self.cfg.get_parameters()
-
         # check for empty tables
         tables = parameters.get('tables')
         if tables is None:
@@ -83,3 +96,21 @@ class App:
             )
         print('BigQuery Writer finished')
 
+    def action_list_projects(self):
+        client = google.cloud.bigquery.client.Client(
+            credentials=self.get_credentials(),
+            project='dummy'
+        )
+        try:
+            projects = list(client.list_projects())
+            print(json.dumps(
+                list(map(
+                    lambda project: {
+                        'id': project.project_id,
+                        'name': project.friendly_name
+                    }, projects))
+                )
+            )
+        except google.cloud.exceptions.Forbidden as err:
+            raise UserException(str(err))
+        return projects

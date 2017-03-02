@@ -16,7 +16,7 @@ class TestApp(GoogleBigQueryWriterTest):
     def setup_method(self):
         self.delete_dataset()
 
-    def test_successful_run(self, data_dir, capsys):
+    def prepare(self, action="run", data_dir=None):
         if os.path.exists(data_dir + "sample_populated"):
             shutil.rmtree(data_dir + "sample_populated")
 
@@ -46,6 +46,7 @@ class TestApp(GoogleBigQueryWriterTest):
 
         data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
         data['parameters']['dataset'] = os.environ.get('BIGQUERY_DATASET')
+        data['parameters']['action'] = action
 
         with open(dst_config_file_path, 'w+') as dst_config_file:
             json.dump(data, dst_config_file)
@@ -63,6 +64,8 @@ class TestApp(GoogleBigQueryWriterTest):
             dst_dir + '/in.c-bucket.table2.csv'
         )
 
+    def test_successful_run(self, data_dir, capsys):
+        self.prepare(action="run", data_dir=data_dir)
         # run app
         application = app.App(data_dir + "sample_populated/")
         application.run()
@@ -177,3 +180,14 @@ class TestApp(GoogleBigQueryWriterTest):
                 os.environ.get('BIGQUERY_DATASET'),
                 os.environ.get('BIGQUERY_DATASET')
             )
+
+    def test_list_projects(self, data_dir, capsys):
+        self.prepare(action="listProjects", data_dir=data_dir)
+        application = app.App(data_dir + "sample_populated/")
+        application.run()
+        out, err = capsys.readouterr()
+        assert err == ''
+        data = json.loads(out)
+        assert os.environ.get('BIGQUERY_PROJECT') in list(
+            map(lambda project: project['id'], data)
+        )
