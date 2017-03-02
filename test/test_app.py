@@ -188,6 +188,7 @@ class TestApp(GoogleBigQueryWriterTest):
         out, err = capsys.readouterr()
         assert err == ''
         data = json.loads(out)
-        assert os.environ.get('BIGQUERY_PROJECT') in list(
-            map(lambda project: project['id'], data)
+        assert os.environ.get('BIGQUERY_PROJECT') in map(
+            lambda project: project['id'],
+            data
         )
