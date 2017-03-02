@@ -196,3 +196,31 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[1] == ('val2', 2)
         assert row_data[2] == ('val1', 1)
         assert row_data[3] == ('val2', 2)
+
+    def test_write_table_sync_newlines(self, data_dir):
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=self.get_credentials()
+        )
+        csv_file = open(data_dir + 'newlines/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'STRING'),
+            bigquery.schema.SchemaField('col2', 'INTEGER')
+        ]
+        my_writer.write_table_sync(
+            csv_file,
+            os.environ.get('BIGQUERY_DATASET'),
+            os.environ.get('BIGQUERY_TABLE'),
+            schema
+        )
+        query = 'SELECT * FROM %s.%s' % (
+            os.environ.get('BIGQUERY_DATASET'),
+            os.environ.get('BIGQUERY_TABLE')
+        )
+        client = self.get_client()
+        query_obj = client.run_sync_query(query)
+        query_obj.run()
+        (row_data, total_rows, page_token) = query_obj.fetch_data()
+        assert total_rows == 2
+        assert row_data[0] == ('val1\non new line', 1)
+        assert row_data[1] == ('val2', 2)

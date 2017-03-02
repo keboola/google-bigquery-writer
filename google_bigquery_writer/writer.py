@@ -55,7 +55,8 @@ class Writer(object):
             job = table.upload_from_file(
                 readable,
                 source_format='CSV',
-                skip_leading_rows=1
+                skip_leading_rows=1,
+                allow_quoted_newlines=True
             )
             return job
 
