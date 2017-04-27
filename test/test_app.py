@@ -204,7 +204,7 @@ class TestApp(GoogleBigQueryWriterTest):
         out, err = capsys.readouterr()
         assert err == ''
         data = json.loads(out)
-        assert 1 == len(data)
+        assert 1 <= len(data)
         assert os.environ.get('BIGQUERY_DATASET') in map(
             lambda dataset: dataset['id'],
             data
