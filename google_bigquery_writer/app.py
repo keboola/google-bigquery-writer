@@ -56,6 +56,9 @@ class App:
         # validate application parameters
         parameters = self.cfg.get_parameters()
         # check for empty tables
+        if isinstance(parameters, list):
+            message = 'There are no tables specified in the configuration.'
+            raise UserException(message)
         tables = parameters.get('tables')
         if tables is None:
             message = 'There are no tables specified in the configuration.'
