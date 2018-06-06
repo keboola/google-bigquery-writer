@@ -1,13 +1,34 @@
 #!/bin/bash
+set -e
 
-# taken from https://gist.github.com/BretFisher/14cd228f0d7e40dae085
-# install aws cli w/o sudo
-pip install --user awscli
-# put aws in the path
-export PATH=$PATH:$HOME/.local/bin
-# needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
-eval $(aws ecr get-login --region us-east-1)
-docker tag keboola/google-bigquery-writer:latest 147946154733.dkr.ecr.us-east-1.amazonaws.com/keboola/wr-google-bigquery:$TRAVIS_TAG
-docker tag keboola/google-bigquery-writer:latest 147946154733.dkr.ecr.us-east-1.amazonaws.com/keboola/wr-google-bigquery:latest
-docker push 147946154733.dkr.ecr.us-east-1.amazonaws.com/keboola/wr-google-bigquery:$TRAVIS_TAG
-docker push 147946154733.dkr.ecr.us-east-1.amazonaws.com/keboola/wr-google-bigquery:latest
+# Obtain the component repository and log in
+docker pull quay.io/keboola/developer-portal-cli-v2:latest
+export REPOSITORY=`docker run --rm  \
+    -e KBC_DEVELOPERPORTAL_USERNAME \
+    -e KBC_DEVELOPERPORTAL_PASSWORD \
+    quay.io/keboola/developer-portal-cli-v2:latest \
+    ecr:get-repository ${KBC_DEVELOPERPORTAL_VENDOR} ${KBC_DEVELOPERPORTAL_APP}`
+
+eval $(docker run --rm \
+    -e KBC_DEVELOPERPORTAL_USERNAME \
+    -e KBC_DEVELOPERPORTAL_PASSWORD \
+    quay.io/keboola/developer-portal-cli-v2:latest \
+    ecr:get-login ${KBC_DEVELOPERPORTAL_VENDOR} ${KBC_DEVELOPERPORTAL_APP})
+
+# Push to the repository
+docker tag ${APP_IMAGE}:latest ${REPOSITORY}:${TRAVIS_TAG}
+docker tag ${APP_IMAGE}:latest ${REPOSITORY}:latest
+docker push ${REPOSITORY}:${TRAVIS_TAG}
+docker push ${REPOSITORY}:latest
+
+# Update the tag in Keboola Developer Portal -> Deploy to KBC
+if echo ${TRAVIS_TAG} | grep -c '^v\?[0-9]\+\.[0-9]\+\.[0-9]\+$'
+then
+    docker run --rm \
+        -e KBC_DEVELOPERPORTAL_USERNAME \
+        -e KBC_DEVELOPERPORTAL_PASSWORD \
+        quay.io/keboola/developer-portal-cli-v2:latest \
+        update-app-repository ${KBC_DEVELOPERPORTAL_VENDOR} ${KBC_DEVELOPERPORTAL_APP} ${TRAVIS_TAG} ecr ${REPOSITORY}
+else
+    echo "Skipping deployment to KBC, tag ${TRAVIS_TAG} is not allowed."
+fi
