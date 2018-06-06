@@ -123,7 +123,7 @@ class TestApp(GoogleBigQueryWriterTest):
         assert rcvd_schema[4].mode == 'NULLABLE'
         assert rcvd_schema[4].name == 'timestamp'
 
-        query = 'SELECT * FROM %s.%s' % (
+        query = 'SELECT * FROM %s.%s ORDER BY 1 DESC' % (
             os.environ.get('BIGQUERY_DATASET'),
             'table1'
         )
