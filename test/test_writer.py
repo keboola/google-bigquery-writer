@@ -56,7 +56,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE'),
             schema
         )
-        query = 'SELECT * FROM %s.%s' % (
+        query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
@@ -84,7 +84,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE'),
             schema
         )
-        query = 'SELECT * FROM %s.%s' % (
+        query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
@@ -148,7 +148,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE'),
             schema
         )
-        query = 'SELECT * FROM %s.%s' % (
+        query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
@@ -183,7 +183,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             schema,
             incremental=True
         )
-        query = 'SELECT * FROM %s.%s' % (
+        query = 'SELECT * FROM %s.%s ORDER BY 1 ASC, 2 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
@@ -193,8 +193,8 @@ class TestWriter(GoogleBigQueryWriterTest):
         (row_data, total_rows, page_token) = query_obj.fetch_data()
         assert total_rows == 4
         assert row_data[0] == ('val1', 1)
-        assert row_data[1] == ('val2', 2)
-        assert row_data[2] == ('val1', 1)
+        assert row_data[1] == ('val1', 1)
+        assert row_data[2] == ('val2', 2)
         assert row_data[3] == ('val2', 2)
 
     def test_write_table_sync_newlines(self, data_dir):
@@ -213,7 +213,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE'),
             schema
         )
-        query = 'SELECT * FROM %s.%s' % (
+        query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )

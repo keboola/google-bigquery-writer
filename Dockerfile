@@ -4,7 +4,7 @@ FROM python:3.6
 RUN pip install --no-cache-dir --ignore-installed \
 		pytest \
         pytest-cov \
-        google-cloud-bigquery \
+        google-cloud-bigquery==0.24 \
         oauth2client
 
 RUN pip install --upgrade --no-cache-dir --ignore-installed --cert=/tmp/cacert.pem git+git://github.com/keboola/python-docker-application.git@1.3.0
