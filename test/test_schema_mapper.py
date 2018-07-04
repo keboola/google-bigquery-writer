@@ -21,6 +21,21 @@ class TestSchema(object):
         table_schema = schema_mapper.get_schema(table_definition)
         assert len(table_schema) == 2
 
+    def test_get_schema_sorted_properly(self):
+        csv_columns = ['id', 'value1', 'value2']
+        table_definition = {
+            'items': [
+                {'dbName': 'value1', "name": "value1", 'type': 'INTEGER'},
+                {'dbName': 'id', "name": "id", 'type': 'INTEGER'},
+                {'dbName': 'value2', "name": "value2", 'type': 'STRING'}
+            ]
+        }
+        table_schema = schema_mapper.get_schema_sorted_properly(table_definition, csv_columns)
+        assert len(table_schema) == 3
+        assert table_schema[0].name == 'id'
+        assert table_schema[1].name == 'value1'
+        assert table_schema[2].name == 'value2'
+
     def test_get_schema_missing_items(self):
         table_definition = {
             'items__x': [

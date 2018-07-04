@@ -79,7 +79,6 @@ class App:
                 )
                 raise UserException(message)
 
-            schema = schema_mapper.get_schema(table)
             input_mapping = matching_inputs[0]
 
             incremental = False
@@ -88,6 +87,10 @@ class App:
 
             file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
             csv_file = open(file_path)
+
+            csv_header_schema = schema_mapper.get_csv_schema_header(csv_file)
+            schema = schema_mapper.get_schema_sorted_properly(table, csv_header_schema)
+
             print('Loading table %s into BigQuery as %s.%s' % (
                 input_mapping['source'],
                 parameters.get('dataset'),
