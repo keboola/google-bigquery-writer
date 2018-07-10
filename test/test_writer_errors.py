@@ -36,7 +36,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema)
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
@@ -56,7 +56,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema
             )
             pytest.fail('Must raise exception.')
@@ -78,7 +78,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema
             )
             pytest.fail('Must raise exception.')
@@ -99,7 +99,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema
             )
             pytest.fail('Must raise exception.')
@@ -119,7 +119,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET') + ' INVALID',
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema
             )
             pytest.fail('Must raise exception.')
@@ -139,7 +139,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE') + ' INVALID',
+                {"dbName": os.environ.get('BIGQUERY_TABLE') + ' INVALID'},
                 schema
             )
             pytest.fail('Must raise exception.')
@@ -159,12 +159,47 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'ANYTHING is not a valid value' in str(err)
+
+    def test_write_table_sync_with_invalid_column_order(self, data_dir):
+        my_writer = writer.Writer(
+            project=os.environ.get('BIGQUERY_PROJECT'),
+            credentials=self.get_credentials()
+        )
+        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        schema = [
+            bigquery.schema.SchemaField('col1', 'STRING'),
+            bigquery.schema.SchemaField('col2', 'INTEGER')
+        ]
+        my_writer.write_table_sync(
+            csv_file,
+            os.environ.get('BIGQUERY_DATASET'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
+            schema
+        )
+
+        invalid_schema = [
+            bigquery.schema.SchemaField('col2', 'INTEGER'),
+            bigquery.schema.SchemaField('col1', 'STRING')
+        ]
+
+        invalid_csv_file = open(data_dir + 'simple_csv_invalid_column_order/in/tables/table.csv')
+        try:
+            my_writer.write_table_sync(
+                invalid_csv_file,
+                os.environ.get('BIGQUERY_DATASET'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
+                invalid_schema,
+                True
+            )
+            pytest.fail('Must raise exception.')
+        except exceptions.UserException as err:
+            assert 'Column order is not right. Actual col2, expected col1.' in str(err)
 
     def test_invalid_project(self, data_dir):
         my_writer = writer.Writer(
@@ -180,7 +215,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             job = my_writer.write_table_sync(
                 csv_file,
                 os.environ.get('BIGQUERY_DATASET'),
-                os.environ.get('BIGQUERY_TABLE'),
+                {"dbName": os.environ.get('BIGQUERY_TABLE')},
                 schema
             )
             pytest.fail('Must raise exception.')

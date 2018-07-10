@@ -32,3 +32,13 @@ def get_schema_sorted_properly(table_definition, csv_header_schema):
 def get_csv_schema_header(csvfile):
     csv_reader = csv.reader(csvfile, delimiter=',', quotechar='"')
     return next(csv_reader)
+
+
+def is_table_definition_in_match_with_bigquery(table_schema, table):
+    table.reload()
+    i = 0
+    for column in table.schema:
+        if column.name != table_schema[i].name:
+            raise UserException('Column order is not right. Actual ' + table_schema[i].name + ', expected ' + column.name + '.')
+        i = i+1
+    return True

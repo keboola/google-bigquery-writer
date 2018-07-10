@@ -99,7 +99,7 @@ class App:
             self.get_writer().write_table_sync(
                 csv_file,
                 parameters.get('dataset'),
-                table['dbName'],
+                table,
                 schema,
                 incremental=incremental
             )

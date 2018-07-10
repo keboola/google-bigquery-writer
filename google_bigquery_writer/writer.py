@@ -1,6 +1,7 @@
 from google.cloud import bigquery
 from google.auth import exceptions
 from google_bigquery_writer.exceptions import UserException
+from google_bigquery_writer import schema_mapper
 import time
 import google.cloud.exceptions
 
@@ -9,12 +10,12 @@ class Writer(object):
     def __init__(self, project=None, credentials=None):
         self.client = bigquery.Client(project, credentials)
 
-    def write_table(self, csv_file, dataset_name, table_name, columns_schema,
+    def write_table(self, csv_file, dataset_name, table_definition, columns_schema,
                     incremental=False
                     ):
         if dataset_name == '' or dataset_name is None:
             raise UserException('Dataset name not specified.')
-        if table_name == '' or table_name is None:
+        if table_definition['dbName'] == '' or table_definition['dbName'] is None:
             raise UserException('Table name not specified.')
         if columns_schema is None or len(columns_schema) == 0:
             raise UserException('Columns schema not specified.')
@@ -42,15 +43,20 @@ class Writer(object):
             )
             raise UserException(message)
 
-        table = dataset.table(table_name, columns_schema)
+        table = dataset.table(table_definition['dbName'], columns_schema)
         try:
             if not incremental and table.exists():
                 table.delete()
             if not table.exists():
                 table.create()
+            if incremental and table.exists():
+                schema_mapper.is_table_definition_in_match_with_bigquery(
+                    columns_schema,
+                    dataset.table(table_definition['dbName'])
+                )
         except google.cloud.exceptions.BadRequest as err:
             message = 'Cannot create table %s: %s' % (
-                table_name,
+                table_definition['dbName'],
                 str(err)
             )
             raise UserException(message)
@@ -63,14 +69,14 @@ class Writer(object):
             )
             return job
 
-    def write_table_sync(self, csv_file, dataset_name, table_name,
+    def write_table_sync(self, csv_file, dataset_name, table_definition,
                          columns_schema, incremental=False,
                          polling_max_retries=360,
                          polling_delay=5):
         job = self.write_table(
             csv_file,
             dataset_name,
-            table_name,
+            table_definition,
             columns_schema,
             incremental=incremental
         )
@@ -84,7 +90,7 @@ class Writer(object):
             message = 'Loading data into table %s.%s didn\'t finish in %s ' \
                 'seconds' % (
                     dataset_name,
-                    table_name,
+                    table_definition['dbName'],
                     polling_delay*polling_max_retries
                 )
             raise UserException(message)
@@ -92,7 +98,7 @@ class Writer(object):
             first_error = job.errors.pop()
             message = 'Loading data into table %s.%s failed: %s' % (
                 dataset_name,
-                table_name,
+                table_definition['dbName'],
                 first_error['message']
             )
             raise UserException(message)

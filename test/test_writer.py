@@ -30,7 +30,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         job = my_writer.write_table(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         assert job.state == 'RUNNING'
@@ -53,7 +53,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
@@ -81,7 +81,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
@@ -109,7 +109,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         client = self.get_client()
@@ -139,13 +139,13 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
@@ -173,13 +173,13 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema,
             incremental=True
         )
@@ -210,7 +210,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file,
             os.environ.get('BIGQUERY_DATASET'),
-            os.environ.get('BIGQUERY_TABLE'),
+            {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
