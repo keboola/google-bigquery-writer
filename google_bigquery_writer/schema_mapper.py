@@ -36,9 +36,16 @@ def get_csv_schema_header(csvfile):
 
 def is_table_definition_in_match_with_bigquery(table_schema, table):
     table.reload()
+    actual_columns = []
+    expected_columns = []
+    fail = False
     i = 0
     for column in table.schema:
+        actual_columns.append(table_schema[i].name)
+        expected_columns.append(column.name)
         if column.name != table_schema[i].name:
-            raise UserException('Column order is not right. Actual ' + table_schema[i].name + ', expected ' + column.name + '.')
+            fail = True
         i = i+1
+    if fail:
+        raise UserException('Unexpected column order. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
     return True

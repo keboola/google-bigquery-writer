@@ -197,7 +197,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Column order is not right. Actual col2, expected col1.' in str(err)
+            assert 'Unexpected column order. Actual: col2, col1, expected: col1, col2.' in str(err)
 
     def test_invalid_project(self, data_dir):
         my_writer = writer.Writer(
