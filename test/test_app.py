@@ -1,5 +1,4 @@
-import pytest
-from google_bigquery_writer import app, exceptions
+from google_bigquery_writer import app
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
 import os
 import json

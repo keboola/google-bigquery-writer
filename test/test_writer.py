@@ -1,11 +1,6 @@
-import csv
-import pytest
-from google_bigquery_writer import writer, exceptions
+from google_bigquery_writer import writer
 from google.cloud import bigquery
-import google.cloud.bigquery
-import google.oauth2.credentials
 import os
-import sys
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
 
 
