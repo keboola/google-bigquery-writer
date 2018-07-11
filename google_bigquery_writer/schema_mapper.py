@@ -45,7 +45,7 @@ def is_table_definition_in_match_with_bigquery(table_schema, table):
         expected_columns.append(column.name)
         if column.name != table_schema[i].name:
             fail = True
-        i = i+1
+        i += 1
     if fail:
         raise UserException('Unexpected column order. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
     return True
