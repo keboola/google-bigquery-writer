@@ -88,8 +88,13 @@ class App:
             file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
             csv_file = open(file_path)
 
+            if 'items' not in table.keys():
+                message = 'Key \'items\' not defined in table definition'
+                raise UserException(message)
+
             csv_header_schema = schema_mapper.get_csv_schema_header(csv_file)
-            schema = schema_mapper.get_schema_sorted_properly(table, csv_header_schema)
+            schema_mapper.is_csv_in_match_with_table_definition(table, csv_header_schema)
+            schema = schema_mapper.get_schema(table)
 
             print('Loading table %s into BigQuery as %s.%s' % (
                 input_mapping['source'],

@@ -5,6 +5,8 @@ import json
 import shutil
 from datetime import datetime
 from datetime import timezone
+from google_bigquery_writer.exceptions import UserException
+import pytest
 
 
 class TestApp(GoogleBigQueryWriterTest):
@@ -62,6 +64,15 @@ class TestApp(GoogleBigQueryWriterTest):
             src_dir + '/in.c-bucket.table2.csv',
             dst_dir + '/in.c-bucket.table2.csv'
         )
+
+    def test_run_with_no_items_throws_user_exception(self, data_dir):
+        self.prepare(action="run", data_dir=data_dir)
+        application = app.App(data_dir + 'config_without_items/')
+        try:
+            application.run()
+            pytest.fail('Must raise exception')
+        except UserException as err:
+            assert str(err) == 'Missing input mapping for table in.c-bucket.table1.'
 
     def test_successful_run(self, data_dir, capsys):
         self.prepare(action="run", data_dir=data_dir)

@@ -1,3 +1,4 @@
+import pytest
 from google_bigquery_writer import schema_mapper
 from google.cloud import bigquery
 from google_bigquery_writer import exceptions
@@ -21,29 +22,29 @@ class TestSchema(object):
         table_schema = schema_mapper.get_schema(table_definition)
         assert len(table_schema) == 2
 
-    def test_get_schema_sorted_properly(self):
-        csv_columns = ['id', 'value1', 'value2']
+
+    def test_is_csv_file_in_match_with_definition(self):
+        csv_columns = ['col1', 'col2']
         table_definition = {
             'items': [
-                {'dbName': 'value1', "name": "value1", 'type': 'INTEGER'},
-                {'dbName': 'id', "name": "id", 'type': 'INTEGER'},
-                {'dbName': 'value2', "name": "value2", 'type': 'STRING'}
+                {'dbName': 'col1', "name": "col1", 'type': 'INTEGER'},
+                {'dbName': 'col2', "name": "col2", 'type': 'STRING'}
             ]
         }
-        table_schema = schema_mapper.get_schema_sorted_properly(table_definition, csv_columns)
-        assert len(table_schema) == 3
-        assert table_schema[0].name == 'id'
-        assert table_schema[1].name == 'value1'
-        assert table_schema[2].name == 'value2'
 
-    def test_get_schema_missing_items(self):
+        assert schema_mapper.is_csv_in_match_with_table_definition(table_definition, csv_columns)
+
+    def test_is_csv_file_in_match_with_definition_throws_user_exception(self):
+        csv_columns = ['col2', 'col1']
         table_definition = {
-            'items__x': [
+            'items': [
+                {'dbName': 'col1', "name": "col1", 'type': 'INTEGER'},
+                {'dbName': 'col2', "name": "col2", 'type': 'STRING'}
             ]
         }
+
         try:
-            schema_mapper.get_schema(table_definition)
-            pytest.fail("Must raise exception.")
+            schema_mapper.is_csv_in_match_with_table_definition(table_definition, csv_columns)
+            pytest.fail("Must raise exception")
         except exceptions.UserException as err:
-            assert str(err) == "Key 'items' not defined in table definition"
-            pass
+            assert str(err) == "Unexpected column order in CSV file. Actual: col2, col1, expected: col1, col2."

@@ -12,26 +12,29 @@ def get_schema_field(item_definition):
 
 
 def get_schema(table_definition):
-    if 'items' not in table_definition:
-        message = 'Key \'items\' not defined in table definition'
-        raise UserException(message)
-
     return list(map(get_schema_field, table_definition['items']))
-
-
-def get_schema_sorted_properly(table_definition, csv_header_schema):
-    items = []
-    for column in csv_header_schema:
-        for column_definition in table_definition['items']:
-            if column == column_definition['name']:
-                items.append(column_definition)
-    table_definition['items'] = items
-    return get_schema(table_definition)
 
 
 def get_csv_schema_header(csvfile):
     csv_reader = csv.reader(csvfile, delimiter=',', quotechar='"')
     return next(csv_reader)
+
+
+def is_csv_in_match_with_table_definition(table_definition, csv_header_schema):
+    actual_columns = []
+    expected_columns = []
+    fail = False
+    i = 0
+    for item_definition in table_definition['items']:
+        actual_columns.append(csv_header_schema[i])
+        expected_columns.append(item_definition['name'])
+        if item_definition['name'] != csv_header_schema[i]:
+            fail = True
+        i += 1
+    if fail:
+        raise UserException(
+            'Unexpected column order in CSV file. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
+    return True
 
 
 def is_table_definition_in_match_with_bigquery(table_schema, table):
@@ -47,5 +50,5 @@ def is_table_definition_in_match_with_bigquery(table_schema, table):
             fail = True
         i += 1
     if fail:
-        raise UserException('Unexpected column order. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
+        raise UserException('Unexpected column order in configuration. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
     return True
