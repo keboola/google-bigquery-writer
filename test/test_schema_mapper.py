@@ -47,4 +47,4 @@ class TestSchema(object):
             schema_mapper.is_csv_in_match_with_table_definition(table_definition, csv_columns)
             pytest.fail("Must raise exception")
         except exceptions.UserException as err:
-            assert str(err) == "Unexpected column order in CSV file. Actual: col2, col1, expected: col1, col2."
+            assert str(err) == "Unexpected column order in configuration. Actual: col1, col2, expected: col2, col1."

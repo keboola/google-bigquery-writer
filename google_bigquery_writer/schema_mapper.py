@@ -25,15 +25,17 @@ def is_csv_in_match_with_table_definition(table_definition, csv_header_schema):
     expected_columns = []
     fail = False
     i = 0
-    for item_definition in table_definition['items']:
-        actual_columns.append(csv_header_schema[i])
-        expected_columns.append(item_definition['name'])
-        if item_definition['name'] != csv_header_schema[i]:
+
+    for csv_column in csv_header_schema:
+        actual_columns.append(table_definition['items'][i]['name'])
+        expected_columns.append(csv_column)
+        if csv_column != table_definition['items'][i]['name']:
             fail = True
         i += 1
+
     if fail:
         raise UserException(
-            'Unexpected column order in CSV file. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
+            'Unexpected column order in configuration. Actual: ' + ', '.join(actual_columns) + ', expected: ' + ', '.join(expected_columns) + '.')
     return True
 
 
