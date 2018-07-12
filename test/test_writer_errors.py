@@ -218,4 +218,4 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Cannot create dataset ds_bigquery. Project invalid-project was not found.' in str(err)
+            assert 'Project invalid-project was not found.' in str(err)
