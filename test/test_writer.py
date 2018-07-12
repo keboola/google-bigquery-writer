@@ -1,7 +1,8 @@
 from google_bigquery_writer import writer
-from google.cloud import bigquery
+from google.cloud import bigquery, exceptions
 import os
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
+import pytest
 
 
 class TestWriter(GoogleBigQueryWriterTest):
@@ -29,11 +30,19 @@ class TestWriter(GoogleBigQueryWriterTest):
             schema
         )
         assert job.state == 'RUNNING'
+
         client = self.get_client()
-        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
-        assert dataset.exists()
-        table = dataset.table(os.environ.get('BIGQUERY_TABLE'))
-        assert table.exists()
+        dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        try:
+            dataset = client.get_dataset(dataset_reference)
+        except exceptions.NotFound:
+            pytest.fail('Must not raise an exception.')
+
+        table_reference = dataset.table(os.environ.get('BIGQUERY_TABLE'))
+        try:
+            client.get_table(table_reference)
+        except exceptions.NotFound:
+            pytest.fail('Must not raise an exception.')
 
     def test_write_table_sync(self, data_dir):
         my_writer = writer.Writer(
@@ -56,12 +65,14 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE')
         )
         client = self.get_client()
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 2
-        assert row_data[0] == ('val1', 1)
-        assert row_data[1] == ('val2', 2)
+        query_job = client.query(query)
+        row_data = list(query_job)
+
+        assert len(row_data) == 2
+        assert row_data[0].col1 == 'val1'
+        assert row_data[0].col2 == 1
+        assert row_data[1].col1 == 'val2'
+        assert row_data[1].col2 == 2
 
     def test_write_table_sync_different_columns(self, data_dir):
         my_writer = writer.Writer(
@@ -84,12 +95,14 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE')
         )
         client = self.get_client()
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 2
-        assert row_data[0] == ('val1', 1)
-        assert row_data[1] == ('val2', 2)
+        query_job = client.query(query)
+
+        row_data = list(query_job)
+        assert len(row_data) == 2
+        assert row_data[0].anything1 == 'val1'
+        assert row_data[0].anything2 == 1
+        assert row_data[1].anything1 == 'val2'
+        assert row_data[1].anything2 == 2
 
     def test_write_table_schema(self, data_dir):
         my_writer = writer.Writer(
@@ -109,17 +122,17 @@ class TestWriter(GoogleBigQueryWriterTest):
         )
         client = self.get_client()
         dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
-        table = dataset.table(os.environ.get('BIGQUERY_TABLE'))
-        table.reload()
-        rcvd_schema = table.schema
-        assert rcvd_schema[0].field_type == 'STRING'
-        assert rcvd_schema[0].fields is None
-        assert rcvd_schema[0].mode == 'NULLABLE'
-        assert rcvd_schema[0].name == 'col1'
-        assert rcvd_schema[1].field_type == 'INTEGER'
-        assert rcvd_schema[1].fields is None
-        assert rcvd_schema[1].mode == 'NULLABLE'
-        assert rcvd_schema[1].name == 'col2'
+        table_reference = dataset.table(os.environ.get('BIGQUERY_TABLE'))
+        table = client.get_table(table_reference)
+
+        assert table.schema[0].field_type == 'STRING'
+        assert table.schema[0].fields == ()
+        assert table.schema[0].mode == 'NULLABLE'
+        assert table.schema[0].name == 'col1'
+        assert table.schema[1].field_type == 'INTEGER'
+        assert table.schema[1].fields == ()
+        assert table.schema[1].mode == 'NULLABLE'
+        assert table.schema[1].name == 'col2'
 
     def test_write_table_sync_overwrite(self, data_dir):
         my_writer = writer.Writer(
@@ -148,12 +161,14 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE')
         )
         client = self.get_client()
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 2
-        assert row_data[0] == ('val1', 1)
-        assert row_data[1] == ('val2', 2)
+        query_job = client.query(query)
+
+        row_data = list(query_job)
+        assert len(row_data) == 2
+        assert row_data[0].col1 == 'val1'
+        assert row_data[0].col2 == 1
+        assert row_data[1].col1 == 'val2'
+        assert row_data[1].col2 == 2
 
     def test_write_table_sync_append(self, data_dir):
         my_writer = writer.Writer(
@@ -183,14 +198,18 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE')
         )
         client = self.get_client()
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 4
-        assert row_data[0] == ('val1', 1)
-        assert row_data[1] == ('val1', 1)
-        assert row_data[2] == ('val2', 2)
-        assert row_data[3] == ('val2', 2)
+        query_job = client.query(query)
+
+        row_data = list(query_job)
+        assert len(row_data) == 4
+        assert row_data[0].col1 == 'val1'
+        assert row_data[0].col2 == 1
+        assert row_data[1].col1 == 'val1'
+        assert row_data[1].col2 == 1
+        assert row_data[2].col1 == 'val2'
+        assert row_data[2].col2 == 2
+        assert row_data[3].col1 == 'val2'
+        assert row_data[3].col2 == 2
 
     def test_write_table_sync_newlines(self, data_dir):
         my_writer = writer.Writer(
@@ -213,9 +232,11 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_TABLE')
         )
         client = self.get_client()
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 2
-        assert row_data[0] == ('val1\non new line', 1)
-        assert row_data[1] == ('val2', 2)
+        query_job = client.query(query)
+
+        row_data = list(query_job)
+        assert len(row_data) == 2
+        assert row_data[0].col1 == 'val1\non new line'
+        assert row_data[0].col2 == 1
+        assert row_data[1].col1 == 'val2'
+        assert row_data[1].col2 == 2

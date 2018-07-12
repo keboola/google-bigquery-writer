@@ -1,4 +1,4 @@
-from google.cloud import bigquery
+from google.cloud import bigquery, exceptions
 import google.oauth2.credentials
 import os
 
@@ -22,12 +22,14 @@ class GoogleBigQueryWriterTest(object):
 
     def delete_dataset(self):
         client = self.get_client()
-        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
-        if dataset.exists():
-            tables = dataset.list_tables()
-            for table in dataset.list_tables():
-                table_obj = dataset.table(table.name)
-                table_obj.delete()
-            dataset.delete()
-        if dataset.exists():
-            raise Exception('Could not delete dataset')
+        dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+
+        try:
+            dataset = client.get_dataset(dataset_reference)
+        except exceptions.NotFound:
+            return
+
+        tables = list(client.list_tables(dataset_reference))
+        for table in tables:
+            client.delete_table(dataset.table(table.table_id))
+        client.delete_dataset(dataset)

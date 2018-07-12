@@ -38,7 +38,6 @@ def is_csv_in_match_with_table_definition(table_definition, csv_header_schema):
 
 
 def is_table_definition_in_match_with_bigquery(table_schema, table):
-    table.reload()
     actual_columns = []
     expected_columns = []
     fail = False
