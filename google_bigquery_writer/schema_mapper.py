@@ -1,7 +1,6 @@
 from google.cloud import bigquery
 from google_bigquery_writer.exceptions import UserException
-import csv
-
+import json
 
 def get_schema_field(item_definition):
     schema_field = bigquery.schema.SchemaField(
@@ -15,9 +14,9 @@ def get_schema(table_definition):
     return list(map(get_schema_field, table_definition['items']))
 
 
-def get_csv_schema_header(csvfile):
-    csv_reader = csv.reader(csvfile, delimiter=',', quotechar='"')
-    return next(csv_reader)
+def get_csv_schema(manifest_file_path):
+    manifest_file = open(manifest_file_path)
+    return json.load(manifest_file)['columns']
 
 
 def is_csv_in_match_with_table_definition(table_definition, csv_header_schema):

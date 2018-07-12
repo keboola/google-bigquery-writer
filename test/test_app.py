@@ -64,6 +64,14 @@ class TestApp(GoogleBigQueryWriterTest):
             src_dir + '/in.c-bucket.table2.csv',
             dst_dir + '/in.c-bucket.table2.csv'
         )
+        shutil.copyfile(
+            src_dir + '/in.c-bucket.table1.csv.manifest',
+            dst_dir + '/in.c-bucket.table1.csv.manifest'
+        )
+        shutil.copyfile(
+            src_dir + '/in.c-bucket.table2.csv.manifest',
+            dst_dir + '/in.c-bucket.table2.csv.manifest'
+        )
 
     def test_run_with_no_items_throws_user_exception(self, data_dir):
         self.prepare(action="run", data_dir=data_dir)

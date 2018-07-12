@@ -85,15 +85,15 @@ class App:
             if 'incremental' in table.keys():
                 incremental = table['incremental']
 
-            file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
-            csv_file = open(file_path)
-
             if 'items' not in table.keys():
                 message = 'Key \'items\' not defined in table definition'
                 raise UserException(message)
 
-            csv_header_schema = schema_mapper.get_csv_schema_header(csv_file)
-            schema_mapper.is_csv_in_match_with_table_definition(table, csv_header_schema)
+            file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
+            manifest_file_path = file_path + '.manifest'
+
+            csv_schema = schema_mapper.get_csv_schema(manifest_file_path)
+            schema_mapper.is_csv_in_match_with_table_definition(table, csv_schema)
             schema = schema_mapper.get_schema(table)
 
             print('Loading table %s into BigQuery as %s.%s' % (
@@ -101,6 +101,8 @@ class App:
                 parameters.get('dataset'),
                 table['dbName']
             ))
+
+            csv_file = open(file_path)
             self.get_writer().write_table_sync(
                 csv_file,
                 parameters.get('dataset'),
