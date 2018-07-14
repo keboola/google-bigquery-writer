@@ -90,9 +90,8 @@ class App:
                 raise UserException(message)
 
             file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
-            manifest_file_path = file_path + '.manifest'
 
-            csv_schema = schema_mapper.get_csv_schema(manifest_file_path)
+            csv_schema = schema_mapper.get_csv_schema(self.data_dir, file_path)
             schema_mapper.is_csv_in_match_with_table_definition(table, csv_schema)
             schema = schema_mapper.get_schema(table)
 
