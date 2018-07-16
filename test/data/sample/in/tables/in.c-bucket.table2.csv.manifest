@@ -1,0 +1,9 @@
+{
+    "columns": [
+        "string",
+        "integer",
+        "float",
+        "boolean",
+        "timestamp"
+    ]
+}
