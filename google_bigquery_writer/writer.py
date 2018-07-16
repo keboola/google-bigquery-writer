@@ -1,9 +1,8 @@
-from google.cloud import bigquery
+from google.cloud import bigquery, exceptions as BQExceptions
 from google.auth import exceptions
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
 import time
-import google.cloud.exceptions
 
 
 class Writer(object):
@@ -22,51 +21,75 @@ class Writer(object):
 
         # TODO list projects and validate, that the project exists
 
-        dataset = self.client.dataset(dataset_name)
+        dataset_reference = self.client.dataset(dataset_name)
+
         try:
-            if not dataset.exists():
-                dataset.create()
+            dataset = self.client.get_dataset(dataset_reference)
+        except BQExceptions.NotFound:
+            try:
+                dataset_obj = bigquery.Dataset(dataset_reference)
+                dataset = self.client.create_dataset(dataset_obj)
+            except BQExceptions.NotFound:
+                message = 'Project %s was not found.' % (
+                    self.client.project
+                )
+                raise UserException(message)
         except exceptions.RefreshError as err:
             message = 'Cannot connect to BigQuery.' \
                 ' Check your access token or refresh token.'
             raise UserException(message)
-        except google.cloud.exceptions.BadRequest as err:
-            message = 'Cannot create dataset %s: %s' % (
-                dataset_name,
-                str(err)
-            )
-            raise UserException(message)
-        except google.cloud.exceptions.NotFound as err:
+        except BQExceptions.BadRequest as err:
             message = 'Cannot create dataset %s: %s' % (
                 dataset_name,
                 str(err)
             )
             raise UserException(message)
 
-        table = dataset.table(table_definition['dbName'], columns_schema)
+        table_ref = dataset.table(table_definition['dbName'])
+        table = bigquery.Table(table_ref, columns_schema)
+
         try:
-            if not incremental and table.exists():
-                table.delete()
-            if not table.exists():
-                table.create()
-            if incremental and table.exists():
+            bq_table = self.client.get_table(table_ref)
+            table_exist = True
+            if incremental:
                 schema_mapper.is_table_definition_in_match_with_bigquery(
                     columns_schema,
-                    dataset.table(table_definition['dbName'])
+                    bq_table
                 )
-        except google.cloud.exceptions.BadRequest as err:
+            else:
+                self.client.delete_table(table_ref)
+                table_exist = False
+        except BQExceptions.NotFound:
+            table_exist = False
+        except BQExceptions.BadRequest as err:
             message = 'Cannot create table %s: %s' % (
                 table_definition['dbName'],
                 str(err)
             )
             raise UserException(message)
+
+        if not table_exist:
+            try:
+                self.client.create_table(table)
+            except BQExceptions.BadRequest as err:
+                message = 'Cannot create table %s: %s' % (
+                    table_definition['dbName'],
+                    str(err)
+                )
+                raise UserException(message)
+
         with open(csv_file.name, 'rb') as readable:
-            job = table.upload_from_file(
+            job_config = bigquery.LoadJobConfig()
+            job_config.source_format = 'CSV'
+            job_config.skip_leading_rows = 1
+            job_config.allow_quoted_newlines=True
+
+            job = self.client.load_table_from_file(
                 readable,
-                source_format='CSV',
-                skip_leading_rows=1,
-                allow_quoted_newlines=True
+                table_ref,
+                job_config=job_config
             )
+
             return job
 
     def write_table_sync(self, csv_file, dataset_name, table_definition,

@@ -7,7 +7,7 @@ from datetime import datetime
 from datetime import timezone
 from google_bigquery_writer.exceptions import UserException
 import pytest
-
+from google.cloud import bigquery
 
 class TestApp(GoogleBigQueryWriterTest):
 
@@ -106,38 +106,39 @@ class TestApp(GoogleBigQueryWriterTest):
         assert len(datasets) >= 1
         # todo find the required dataset
         matching_datasets = list(filter(
-            lambda dataset: dataset.name == os.environ.get('BIGQUERY_DATASET'), datasets
+            lambda dataset: dataset.dataset_id == os.environ.get('BIGQUERY_DATASET'), datasets
         ))
 
         assert len(matching_datasets) == 1
-        assert matching_datasets[0].name == os.environ.get('BIGQUERY_DATASET')
+        assert matching_datasets[0].dataset_id == os.environ.get('BIGQUERY_DATASET')
 
-        tables = list(matching_datasets[0].list_tables())
+        tables = list(client.list_tables(matching_datasets[0].reference)) #list(matching_datasets[0].list_tables())
         assert len(tables) == 2
-        assert tables[0].name == 'table1'
-        assert tables[1].name == 'table2'
+        assert tables[0].reference.table_id == 'table1'
+        assert tables[1].reference.table_id == 'table2'
 
-        table = matching_datasets[0].table('table1')
-        table.reload()
+        table_reference = matching_datasets[0].table('table1')
+        table = client.get_table(table_reference)
+
         rcvd_schema = table.schema
         assert rcvd_schema[0].field_type == 'STRING'
-        assert rcvd_schema[0].fields is None
+        assert rcvd_schema[0].fields == ()
         assert rcvd_schema[0].mode == 'NULLABLE'
         assert rcvd_schema[0].name == 'string'
         assert rcvd_schema[1].field_type == 'INTEGER'
-        assert rcvd_schema[1].fields is None
+        assert rcvd_schema[1].fields == ()
         assert rcvd_schema[1].mode == 'NULLABLE'
         assert rcvd_schema[1].name == 'integer'
         assert rcvd_schema[2].field_type == 'FLOAT'
-        assert rcvd_schema[2].fields is None
+        assert rcvd_schema[2].fields == ()
         assert rcvd_schema[2].mode == 'NULLABLE'
         assert rcvd_schema[2].name == 'float'
         assert rcvd_schema[3].field_type == 'BOOLEAN'
-        assert rcvd_schema[3].fields is None
+        assert rcvd_schema[3].fields == ()
         assert rcvd_schema[3].mode == 'NULLABLE'
         assert rcvd_schema[3].name == 'boolean'
         assert rcvd_schema[4].field_type == 'TIMESTAMP'
-        assert rcvd_schema[4].fields is None
+        assert rcvd_schema[4].fields == ()
         assert rcvd_schema[4].mode == 'NULLABLE'
         assert rcvd_schema[4].name == 'timestamp'
 
@@ -145,27 +146,37 @@ class TestApp(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             'table1'
         )
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 3
+
+        query_job = client.query(query)
+        row_data = list(query_job)
+
+        assert len(row_data) == 3
         assert row_data[0][0] == 'MyString'
         assert row_data[0][1] == 123456
         assert row_data[0][2] == 123.456
         assert row_data[0][3] is True
         assert row_data[0][4] == datetime(2014, 8, 19, 12, 41, 35, 220000,
                                           tzinfo=timezone.utc)
-        assert row_data[1] == ('', 0, 0, False, None)
-        assert row_data[2] == (None, None, None, None, None)
+        assert row_data[1][0] == ''
+        assert row_data[1][1] == 0
+        assert row_data[1][2] == 0
+        assert row_data[1][3] is False
+        assert row_data[1][4] is None
+
+        assert row_data[2][0] is None
+        assert row_data[2][1] is None
+        assert row_data[2][2] is None
+        assert row_data[2][3] is None
+        assert row_data[2][4] is None
 
         query = 'SELECT * FROM %s.%s' % (
             os.environ.get('BIGQUERY_DATASET'),
             'table2'
         )
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 3
+        query_job = client.query(query)
+
+        row_data = list(query_job)
+        assert len(row_data) == 3
 
         # run app second time (increments)
         application = app.App(data_dir + "sample_populated/")
@@ -175,19 +186,17 @@ class TestApp(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             'table1'
         )
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 3
+        query_job = client.query(query)
+        row_data = list(query_job)
+        assert len(row_data) == 3
 
         query = 'SELECT * FROM %s.%s' % (
             os.environ.get('BIGQUERY_DATASET'),
             'table2'
         )
-        query_obj = client.run_sync_query(query)
-        query_obj.run()
-        (row_data, total_rows, page_token) = query_obj.fetch_data()
-        assert total_rows == 6
+        query_job = client.query(query)
+        row_data = list(query_job)
+        assert len(row_data) == 6
 
         out, err = capsys.readouterr()
         assert err == ''
@@ -213,8 +222,9 @@ class TestApp(GoogleBigQueryWriterTest):
 
     def test_list_datasets(self, data_dir, capsys):
         client = self.get_client()
-        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
-        dataset.create()
+        dataset_reference = bigquery.DatasetReference(os.environ.get('BIGQUERY_PROJECT'), os.environ.get('BIGQUERY_DATASET'))
+        dataset = bigquery.Dataset(dataset_reference)
+        client.create_dataset(dataset)
 
         self.prepare(action="listDatasets", data_dir=data_dir)
         application = app.App(data_dir + "sample_populated/")

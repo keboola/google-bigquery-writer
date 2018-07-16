@@ -4,7 +4,7 @@ FROM python:3.6
 RUN pip install --no-cache-dir --ignore-installed \
 		pytest \
         pytest-cov \
-        google-cloud-bigquery==0.24 \
+        google-cloud-bigquery==1.4.0 \
         oauth2client \
         coverage==4.3.4
 

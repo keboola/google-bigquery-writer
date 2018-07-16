@@ -136,8 +136,8 @@ class App:
         print(json.dumps(
             list(map(
                 lambda dataset: {
-                    'id': dataset.name,
-                    'name': dataset.name
+                    'id': dataset.dataset_id,
+                    'name': dataset.dataset_id
                 }, datasets))
             )
         )
