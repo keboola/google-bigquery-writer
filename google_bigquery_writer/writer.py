@@ -30,8 +30,7 @@ class Writer(object):
                 dataset_obj = bigquery.Dataset(dataset_reference)
                 dataset = self.client.create_dataset(dataset_obj)
             except BQExceptions.NotFound:
-                message = 'Cannot create dataset %s. Project %s was not found.' % (
-                    dataset_name,
+                message = 'Project %s was not found.' % (
                     self.client.project
                 )
                 raise UserException(message)
