@@ -1,10 +1,11 @@
-# coding=utf-8
 from keboola import docker
 from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
 import google.oauth2.credentials
+from google.cloud import bigquery
 import json
 from google_bigquery_writer import schema_mapper
+from google_bigquery_writer.bigquery_client_factory import BigqueryClientFactory
 
 
 class App:
@@ -24,22 +25,25 @@ class App:
         )
         return credentials
 
-    def get_writer(self):
+    def get_writer(self):  # @todo refactor
         """
         Late loading method
         """
         if self.writer:
             return self.writer
+
         parameters = self.cfg.get_parameters()
-        my_writer = google_bigquery_writer.writer.Writer(
-            project=parameters.get('project'),
-            credentials=self.get_credentials()
+        bigquery_client_factory = BigqueryClientFactory(
+            parameters.get('project'),
+            self.get_credentials()
         )
+
+        bigquery_client = bigquery_client_factory.create()
+        my_writer = google_bigquery_writer.writer.Writer(bigquery_client)
         self.writer = my_writer
         return self.writer
 
     def run(self):
-        parameters = self.cfg.get_parameters()
         action = self.cfg.get_action()
         if action == 'run' or action is None or action == '':
             self.action_run()
@@ -89,9 +93,9 @@ class App:
                 message = 'Key \'items\' not defined in table definition'
                 raise UserException(message)
 
-            file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
+            csv_file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
 
-            csv_schema = schema_mapper.get_csv_schema(self.data_dir, file_path)
+            csv_schema = schema_mapper.get_csv_schema(self.data_dir, csv_file_path)
             schema_mapper.is_csv_in_match_with_table_definition(table, csv_schema)
             schema = schema_mapper.get_schema(table)
 
@@ -101,9 +105,8 @@ class App:
                 table['dbName']
             ))
 
-            csv_file = open(file_path)
             self.get_writer().write_table_sync(
-                csv_file,
+                csv_file_path,
                 parameters.get('dataset'),
                 table,
                 schema,

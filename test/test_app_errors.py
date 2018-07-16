@@ -2,7 +2,7 @@ import pytest
 from google_bigquery_writer import app, exceptions
 
 
-class TestAppErrors():
+class TestAppErrors:
 
     def test_empty_config(self, data_dir):
         application = app.App(data_dir + "empty_config/")

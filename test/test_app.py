@@ -9,12 +9,13 @@ from google_bigquery_writer.exceptions import UserException
 import pytest
 from google.cloud import bigquery
 
-class TestApp(GoogleBigQueryWriterTest):
 
+class TestApp(GoogleBigQueryWriterTest):
     def teardown_method(self):
         self.delete_dataset()
 
     def setup_method(self):
+        super(TestApp, self).setup_method()
         self.delete_dataset()
 
     def prepare(self, action="run", data_dir=None):

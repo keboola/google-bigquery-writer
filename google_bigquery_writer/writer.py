@@ -6,10 +6,10 @@ import time
 
 
 class Writer(object):
-    def __init__(self, project=None, credentials=None):
-        self.client = bigquery.Client(project, credentials)
+    def __init__(self, bigquery_client):
+        self.bigquery_client = bigquery_client
 
-    def write_table(self, csv_file, dataset_name, table_definition, columns_schema,
+    def write_table(self, csv_file_path, dataset_name, table_definition, columns_schema,
                     incremental=False
                     ):
         if dataset_name == '' or dataset_name is None:
@@ -21,17 +21,17 @@ class Writer(object):
 
         # TODO list projects and validate, that the project exists
 
-        dataset_reference = self.client.dataset(dataset_name)
+        dataset_reference = self.bigquery_client.dataset(dataset_name)
 
         try:
-            dataset = self.client.get_dataset(dataset_reference)
+            dataset = self.bigquery_client.get_dataset(dataset_reference)
         except BQExceptions.NotFound:
             try:
                 dataset_obj = bigquery.Dataset(dataset_reference)
-                dataset = self.client.create_dataset(dataset_obj)
+                dataset = self.bigquery_client.create_dataset(dataset_obj)
             except BQExceptions.NotFound:
                 message = 'Project %s was not found.' % (
-                    self.client.project
+                    self.bigquery_client.project
                 )
                 raise UserException(message)
         except exceptions.RefreshError as err:
@@ -49,7 +49,7 @@ class Writer(object):
         table = bigquery.Table(table_ref, columns_schema)
 
         try:
-            bq_table = self.client.get_table(table_ref)
+            bq_table = self.bigquery_client.get_table(table_ref)
             table_exist = True
             if incremental:
                 schema_mapper.is_table_definition_in_match_with_bigquery(
@@ -57,7 +57,7 @@ class Writer(object):
                     bq_table
                 )
             else:
-                self.client.delete_table(table_ref)
+                self.bigquery_client.delete_table(table_ref)
                 table_exist = False
         except BQExceptions.NotFound:
             table_exist = False
@@ -70,7 +70,7 @@ class Writer(object):
 
         if not table_exist:
             try:
-                self.client.create_table(table)
+                self.bigquery_client.create_table(table)
             except BQExceptions.BadRequest as err:
                 message = 'Cannot create table %s: %s' % (
                     table_definition['dbName'],
@@ -78,13 +78,13 @@ class Writer(object):
                 )
                 raise UserException(message)
 
-        with open(csv_file.name, 'rb') as readable:
+        with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()
             job_config.source_format = 'CSV'
             job_config.skip_leading_rows = 1
-            job_config.allow_quoted_newlines=True
+            job_config.allow_quoted_newlines = True
 
-            job = self.client.load_table_from_file(
+            job = self.bigquery_client.load_table_from_file(
                 readable,
                 table_ref,
                 job_config=job_config
@@ -92,19 +92,18 @@ class Writer(object):
 
             return job
 
-    def write_table_sync(self, csv_file, dataset_name, table_definition,
+    def write_table_sync(self, csv_file_path, dataset_name, table_definition,
                          columns_schema, incremental=False,
                          polling_max_retries=360,
                          polling_delay=5):
         job = self.write_table(
-            csv_file,
+            csv_file_path,
             dataset_name,
             table_definition,
             columns_schema,
             incremental=incremental
         )
         retry_count = 0
-        sleep_runsum = 0
         while retry_count < polling_max_retries and job.state != u'DONE':
             time.sleep(polling_delay)
             retry_count += 1

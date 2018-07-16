@@ -11,20 +11,17 @@ class TestWriter(GoogleBigQueryWriterTest):
         self.delete_dataset()
 
     def setup_method(self):
+        super(TestWriter, self).setup_method()
         self.delete_dataset()
 
     def test_write_table_async(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
         job = my_writer.write_table(
-            csv_file,
+            data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
@@ -45,17 +42,13 @@ class TestWriter(GoogleBigQueryWriterTest):
             pytest.fail('Must not raise an exception.')
 
     def test_write_table_sync(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
         my_writer.write_table_sync(
-            csv_file,
+            data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
@@ -75,17 +68,13 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[1].col2 == 2
 
     def test_write_table_sync_different_columns(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
         schema = [
             bigquery.schema.SchemaField('anything1', 'STRING'),
             bigquery.schema.SchemaField('anything2', 'INTEGER')
         ]
         my_writer.write_table_sync(
-            csv_file,
+            data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
@@ -105,17 +94,13 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[1].anything2 == 2
 
     def test_write_table_schema(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
         my_writer.write_table_sync(
-            csv_file,
+            data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
@@ -135,23 +120,20 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert table.schema[1].name == 'col2'
 
     def test_write_table_sync_overwrite(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
+        csv_file_path = data_dir + 'simple_csv/in/tables/table.csv'
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
         my_writer.write_table_sync(
-            csv_file,
+            csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         my_writer.write_table_sync(
-            csv_file,
+            csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
@@ -171,23 +153,20 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[1].col2 == 2
 
     def test_write_table_sync_append(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
+        csv_file_path = data_dir + 'simple_csv/in/tables/table.csv'
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
         my_writer.write_table_sync(
-            csv_file,
+            csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
         )
         my_writer.write_table_sync(
-            csv_file,
+            csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema,
@@ -212,17 +191,13 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[3].col2 == 2
 
     def test_write_table_sync_newlines(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'newlines/in/tables/table.csv')
+        my_writer = writer.Writer(self.get_client())
         schema = [
             bigquery.schema.SchemaField('col1', 'STRING'),
             bigquery.schema.SchemaField('col2', 'INTEGER')
         ]
         my_writer.write_table_sync(
-            csv_file,
+            data_dir + 'newlines/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
             {"dbName": os.environ.get('BIGQUERY_TABLE')},
             schema
