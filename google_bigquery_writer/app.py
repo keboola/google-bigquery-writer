@@ -9,7 +9,7 @@ from google_bigquery_writer.bigquery_client_factory import BigqueryClientFactory
 
 
 class App:
-    def __init__(self, data_dir=None):
+    def __init__(self, data_dir: str = None):
         self.data_dir = data_dir
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
