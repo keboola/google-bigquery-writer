@@ -21,46 +21,35 @@ def get_csv_schema(data_dir: str, file_path: str) -> list:
 
 
 def is_csv_in_match_with_table_definition(table_definition: dict, csv_header_schema: list) -> bool:
-    actual_columns = []
-    expected_columns = []
-    fail = False
-    i = 0
-
-    for csv_column in csv_header_schema:
-        actual_columns.append(table_definition['items'][i]['name'])
-        expected_columns.append(csv_column)
-        if csv_column != table_definition['items'][i]['name']:
-            fail = True
-        i += 1
-
-    if fail:
-        raise UserException(
-            'Column order mismatch. Actual configuration: %s, expected csv: %s.' %
-            (
-                ', '.join(actual_columns),
-                ', '.join(expected_columns)
-            )
-        )
-    return True
+    expected_schema = ColumnsSchema('csv', csv_header_schema)
+    actual_schema = ColumnsSchema('configuration', list(map(lambda col: col['name'], table_definition['items'])))
+    return compare_schema(expected_schema, actual_schema)
 
 
 def is_table_definition_in_match_with_bigquery(table_schema: list, table: bigquery.Table) -> bool:
-    actual_columns = []
-    expected_columns = []
-    fail = False
-    i = 0
-    for column in table.schema:
-        actual_columns.append(table_schema[i].name)
-        expected_columns.append(column.name)
-        if column.name != table_schema[i].name:
-            fail = True
-        i += 1
-    if fail:
-        raise UserException(
-            'Column order mismatch. Actual configuration: %s, BigQuery expected: %s.' %
-            (
-                ', '.join(actual_columns),
-                ', '.join(expected_columns)
+    expected_schema = ColumnsSchema('BigQuery', list(map(lambda col: col.name, table.schema)))
+    actual_schema = ColumnsSchema('configuration', list(map(lambda col: col.name, table_schema)))
+
+    return compare_schema(expected_schema, actual_schema)
+
+
+class ColumnsSchema:
+    def __init__(self, source: str, columns: list):
+        self.source = source
+        self.columns = columns
+
+
+def compare_schema(expected_schema: ColumnsSchema, actual_schema: ColumnsSchema) -> bool:
+    actual_columns = actual_schema.columns.copy()
+    for expected_column in expected_schema.columns:
+        if expected_column != actual_columns.pop(0):
+            raise UserException(
+                'Column order mismatch. Actual %s: %s. Expected %s: %s.' %
+                (
+                    actual_schema.source,
+                    ', '.join(actual_schema.columns),
+                    expected_schema.source,
+                    ', '.join(expected_schema.columns)
+                )
             )
-        )
-    return True
+        return True
