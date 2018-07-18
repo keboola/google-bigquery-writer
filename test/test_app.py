@@ -81,7 +81,7 @@ class TestApp(GoogleBigQueryWriterTest):
             application.run()
             pytest.fail('Must raise exception')
         except UserException as err:
-            assert str(err) == 'Missing input mapping for table in.c-bucket.table1.'
+            assert str(err) == 'Key \'items\' not defined in \'in.c-bucket.table1\' table definition.'
 
     def test_successful_run(self, data_dir, capsys):
         self.prepare(action="run", data_dir=data_dir)

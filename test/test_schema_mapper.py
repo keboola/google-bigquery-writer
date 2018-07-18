@@ -53,26 +53,22 @@ class TestSchema(object):
 
     def test_is_csv_file_in_match_with_definition(self):
         csv_columns = ['col1', 'col2']
-        table_definition = {
-            'items': [
-                {'dbName': 'col1', "name": "col1", 'type': 'INTEGER'},
-                {'dbName': 'col2', "name": "col2", 'type': 'STRING'}
-            ]
-        }
+        columns_configuration = [
+            {'dbName': 'col1', "name": "col1", 'type': 'INTEGER'},
+            {'dbName': 'col2', "name": "col2", 'type': 'STRING'}
+        ]
 
-        assert schema_mapper.is_csv_in_match_with_table_definition(table_definition, csv_columns)
+        assert schema_mapper.is_csv_in_match_with_table_definition(columns_configuration, csv_columns)
 
     def test_is_csv_file_in_match_with_definition_throws_user_exception(self):
         csv_columns = ['col2', 'col1']
-        table_definition = {
-            'items': [
-                {'dbName': 'col1', "name": "col1", 'type': 'INTEGER'},
-                {'dbName': 'col2', "name": "col2", 'type': 'STRING'}
-            ]
-        }
+        columns_configuration = [
+            {'dbName': 'col1', "name": "col1", 'type': 'INTEGER'},
+            {'dbName': 'col2', "name": "col2", 'type': 'STRING'}
+        ]
 
         try:
-            schema_mapper.is_csv_in_match_with_table_definition(table_definition, csv_columns)
+            schema_mapper.is_csv_in_match_with_table_definition(columns_configuration, csv_columns)
             pytest.fail("Must raise exception")
         except exceptions.UserException as err:
             assert str(err) == "Column order mismatch. Actual configuration: col1, col2. Expected csv: col2, col1."

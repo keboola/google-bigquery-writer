@@ -90,8 +90,6 @@ class Writer(object):
         if columns_schema is None or len(columns_schema) == 0:
             raise UserException('Columns schema not specified.')
 
-        # TODO list projects and validate, that the project exists
-
         dataset = self.obtain_dataset(dataset_name)
         table_reference = self.prepare_table(dataset, table_definition['dbName'], columns_schema, incremental)
 

@@ -20,9 +20,21 @@ def get_csv_schema(data_dir: str, file_path: str) -> list:
     return docker.Config(data_dir).get_file_manifest(file_path)['columns']
 
 
-def is_csv_in_match_with_table_definition(table_definition: dict, csv_header_schema: list) -> bool:
+def get_input_table_mapping(input_tables_mapping: list, table_id: str) -> dict:
+    input_tables = list(filter(
+        lambda input_table: input_table['source'] == table_id, input_tables_mapping
+    ))
+
+    # check for missing data tables
+    if len(input_tables) == 0:
+        message = 'Missing input mapping for table %s.' % table_id
+        raise UserException(message)
+    return input_tables[0]
+
+
+def is_csv_in_match_with_table_definition(columns_configuration: list, csv_header_schema: list) -> bool:
     expected_schema = ColumnsSchema('csv', csv_header_schema)
-    actual_schema = ColumnsSchema('configuration', list(map(lambda col: col['name'], table_definition['items'])))
+    actual_schema = ColumnsSchema('configuration', list(map(lambda col: col['name'], columns_configuration)))
     return compare_schema(expected_schema, actual_schema)
 
 

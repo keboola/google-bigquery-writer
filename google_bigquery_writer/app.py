@@ -68,39 +68,23 @@ class App:
             message = 'There are no tables specified in the configuration.'
             raise UserException(message)
 
-        input_tables = self.cfg.get_input_tables()
         for table in tables:
             # skip tables with export: false
             if 'export' in table.keys() and table['export'] is False:
                 continue
-            matching_inputs = list(filter(
-                lambda input: input['source'] == table['tableId'], input_tables
-            ))
-            # check for missing data tables
-            if len(matching_inputs) == 0:
-                message = 'Missing input mapping for table %s.' % (
-                    table['tableId']
-                )
-                raise UserException(message)
-
-            input_mapping = matching_inputs[0]
-
-            incremental = False
-            if 'incremental' in table.keys():
-                incremental = table['incremental']
-
             if 'items' not in table.keys():
-                message = 'Key \'items\' not defined in table definition'
+                message = 'Key \'items\' not defined in \'%s\' table definition.' % table['tableId']
                 raise UserException(message)
 
-            csv_file_path = self.data_dir + '/in/tables/' + input_mapping['destination']
+            input_table_mapping = schema_mapper.get_input_table_mapping(self.cfg.get_input_tables(), table['tableId'])
+            incremental = 'incremental' in table.keys() and table['incremental'] is True
+            csv_file_path = self.data_dir + '/in/tables/' + input_table_mapping['destination']
 
             csv_schema = schema_mapper.get_csv_schema(self.data_dir, csv_file_path)
-            schema_mapper.is_csv_in_match_with_table_definition(table, csv_schema)
-            schema = schema_mapper.get_schema(table)
+            schema_mapper.is_csv_in_match_with_table_definition(table['items'], csv_schema)
 
             print('Loading table %s into BigQuery as %s.%s' % (
-                input_mapping['source'],
+                input_table_mapping['source'],
                 parameters.get('dataset'),
                 table['dbName']
             ))
@@ -109,7 +93,7 @@ class App:
                 csv_file_path,
                 parameters.get('dataset'),
                 table,
-                schema,
+                schema_mapper.get_schema(table),
                 incremental=incremental
             )
         print('BigQuery Writer finished')
