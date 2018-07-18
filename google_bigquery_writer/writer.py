@@ -80,15 +80,19 @@ class Writer(object):
             csv_file_path: str,
             dataset_name: str,
             table_definition: dict,
-            columns_schema: list,
             incremental: bool = False
     ) -> bigquery.LoadJob:
         if dataset_name == '' or dataset_name is None:
             raise UserException('Dataset name not specified.')
         if table_definition['dbName'] == '' or table_definition['dbName'] is None:
             raise UserException('Table name not specified.')
+
+        columns_schema = schema_mapper.get_schema(table_definition)
         if columns_schema is None or len(columns_schema) == 0:
             raise UserException('Columns schema not specified.')
+
+        csv_schema = schema_mapper.get_csv_schema(csv_file_path)
+        schema_mapper.is_csv_in_match_with_table_definition(table_definition['items'], csv_schema)
 
         dataset = self.obtain_dataset(dataset_name)
         table_reference = self.prepare_table(dataset, table_definition['dbName'], columns_schema, incremental)
@@ -112,7 +116,6 @@ class Writer(object):
             csv_file_path: str,
             dataset_name: str,
             table_definition: dict,
-            columns_schema: list,
             incremental: bool = False,
             polling_max_retries: int = 360,
             polling_delay: int = 5
@@ -121,7 +124,6 @@ class Writer(object):
             csv_file_path,
             dataset_name,
             table_definition,
-            columns_schema,
             incremental=incremental
         )
         retry_count = 0

@@ -16,31 +16,28 @@ class App:
 
     def get_credentials(self):
         oauthapi_data = self.cfg.get_oauthapi_data()
-        credentials = google.oauth2.credentials.Credentials(
+        return google.oauth2.credentials.Credentials(
             oauthapi_data.get('access_token'),
             token_uri='https://accounts.google.com/o/oauth2/token',
             client_id=self.cfg.get_oauthapi_appkey(),
             client_secret=self.cfg.get_oauthapi_appsecret(),
             refresh_token=oauthapi_data.get('refresh_token')
         )
-        return credentials
 
-    def get_writer(self):  # @todo refactor
+    def get_writer(self):
         """
         Late loading method
         """
         if self.writer:
             return self.writer
 
-        parameters = self.cfg.get_parameters()
         bigquery_client_factory = BigqueryClientFactory(
-            parameters.get('project'),
+            self.cfg.get_parameters().get('project'),
             self.get_credentials()
         )
 
         bigquery_client = bigquery_client_factory.create()
-        my_writer = google_bigquery_writer.writer.Writer(bigquery_client)
-        self.writer = my_writer
+        self.writer = google_bigquery_writer.writer.Writer(bigquery_client)
         return self.writer
 
     def run(self):
@@ -80,9 +77,6 @@ class App:
             incremental = 'incremental' in table.keys() and table['incremental'] is True
             csv_file_path = self.data_dir + '/in/tables/' + input_table_mapping['destination']
 
-            csv_schema = schema_mapper.get_csv_schema(self.data_dir, csv_file_path)
-            schema_mapper.is_csv_in_match_with_table_definition(table['items'], csv_schema)
-
             print('Loading table %s into BigQuery as %s.%s' % (
                 input_table_mapping['source'],
                 parameters.get('dataset'),
@@ -93,7 +87,6 @@ class App:
                 csv_file_path,
                 parameters.get('dataset'),
                 table,
-                schema_mapper.get_schema(table),
                 incremental=incremental
             )
         print('BigQuery Writer finished')
