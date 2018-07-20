@@ -17,4 +17,4 @@ COPY . /home/
 WORKDIR /home/
 
 # Run the application
-CMD python -u ./main.py --data=/data/
+CMD python -u ./main.py

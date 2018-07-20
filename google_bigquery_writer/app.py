@@ -4,13 +4,14 @@ import google_bigquery_writer.writer
 import google.oauth2.credentials
 from google.cloud import bigquery
 import json
+import os
 from google_bigquery_writer import schema_mapper
 from google_bigquery_writer.bigquery_client_factory import BigqueryClientFactory
 
 
 class App:
-    def __init__(self, data_dir: str = None):
-        self.data_dir = data_dir
+    def __init__(self):
+        self.data_dir = os.environ.get('KBC_DATADIR')
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
 

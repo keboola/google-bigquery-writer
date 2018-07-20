@@ -75,8 +75,9 @@ class TestApp(GoogleBigQueryWriterTest):
         )
 
     def test_run_with_no_items_throws_user_exception(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + 'config_without_items/'
         self.prepare(action="run", data_dir=data_dir)
-        application = app.App(data_dir + 'config_without_items/')
+        application = app.App()
         try:
             application.run()
             pytest.fail('Must raise exception')
@@ -84,9 +85,10 @@ class TestApp(GoogleBigQueryWriterTest):
             assert str(err) == 'Key \'items\' not defined in \'in.c-bucket.table1\' table definition.'
 
     def test_successful_run(self, data_dir, capsys):
+        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
         self.prepare(action="run", data_dir=data_dir)
         # run app
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
 
         # assertions
@@ -180,7 +182,7 @@ class TestApp(GoogleBigQueryWriterTest):
         assert len(row_data) == 3
 
         # run app second time (increments)
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
 
         query = 'SELECT * FROM %s.%s' % (
@@ -210,8 +212,9 @@ class TestApp(GoogleBigQueryWriterTest):
             )
 
     def test_list_projects(self, data_dir, capsys):
+        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
         self.prepare(action="listProjects", data_dir=data_dir)
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
         out, err = capsys.readouterr()
         assert err == ''
@@ -222,13 +225,14 @@ class TestApp(GoogleBigQueryWriterTest):
         )
 
     def test_list_datasets(self, data_dir, capsys):
+        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
         client = self.get_client()
         dataset_reference = bigquery.DatasetReference(os.environ.get('BIGQUERY_PROJECT'), os.environ.get('BIGQUERY_DATASET'))
         dataset = bigquery.Dataset(dataset_reference)
         client.create_dataset(dataset)
 
         self.prepare(action="listDatasets", data_dir=data_dir)
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
         out, err = capsys.readouterr()
         assert err == ''

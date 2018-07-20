@@ -1,11 +1,13 @@
 import pytest
+import os
 from google_bigquery_writer import app, exceptions
 
 
 class TestAppErrors:
 
     def test_empty_config(self, data_dir):
-        application = app.App(data_dir + "empty_config/")
+        os.environ['KBC_DATADIR'] = data_dir + "empty_config/"
+        application = app.App()
         try:
             application.run()
             pytest.fail("Must raise exception.")
@@ -15,7 +17,8 @@ class TestAppErrors:
             pass
 
     def test_missing_input(self, data_dir):
-        application = app.App(data_dir + "missing_input/")
+        os.environ['KBC_DATADIR'] = data_dir + "missing_input/"
+        application = app.App()
         try:
             application.run()
             pytest.fail("Must raise exception.")
@@ -25,7 +28,8 @@ class TestAppErrors:
             pass
 
     def test_action_not_defined(self, data_dir):
-        application = app.App(data_dir + "invalid_action/")
+        os.environ['KBC_DATADIR'] = data_dir + "invalid_action/"
+        application = app.App()
         try:
             application.run()
             pytest.fail("Must raise exception.")
@@ -34,11 +38,11 @@ class TestAppErrors:
             pass
 
     def test_invalid_parameters(self, data_dir):
-        application = app.App(data_dir + "invalid_parameters_type/")
+        os.environ['KBC_DATADIR'] = data_dir + "invalid_parameters_type/"
+        application = app.App()
         try:
             application.run()
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
-            assert str(err) == "There are no tables " \
-                               "specified in the configuration."
+            assert str(err) == "There are no tables specified in the configuration."
             pass
