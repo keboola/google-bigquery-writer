@@ -1,6 +1,7 @@
 import sys
 import traceback
-from google_bigquery_writer.exceptions import UserException, ApplicationException
+from google_bigquery_writer.exceptions \
+    import UserException, ApplicationException
 from google_bigquery_writer.app import App
 
 
