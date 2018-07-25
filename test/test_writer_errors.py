@@ -33,7 +33,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table(
                 data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_table_configuration()
+                fixtures.get_table_configuration()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
@@ -45,13 +45,13 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv_with_extra_column/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_with_extra_column_table_configuration(),
+                fixtures.get_table_configuration_with_extra_column(),
                 True
             )
             pytest.fail('Must raise exception.')
@@ -63,13 +63,13 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'simple_csv_with_extra_column/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_with_extra_column_table_configuration()
+            fixtures.get_table_configuration_with_extra_column()
         )
         try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_table_configuration(),
+                fixtures.get_table_configuration(),
                 True
             )
             pytest.fail('Must raise exception.')
@@ -81,13 +81,13 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv_invalid_data_types/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_invalid_data_types_table_configuration(),
+                fixtures.get_table_configuration_with_invalid_data_type(),
                 True
             )
             pytest.fail('Must raise exception.')
@@ -100,7 +100,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET') + ' INVALID',
-                fixtures.get_simple_csv_table_configuration()
+                fixtures.get_table_configuration()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
@@ -112,7 +112,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_table_configuration_with_invalid_table_name()
+                fixtures.get_table_configuration_with_invalid_table_name()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
@@ -124,7 +124,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_table_configuration_with_invalid_datatype()
+                fixtures.get_table_configuration_with_invalid_datatype()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
@@ -135,18 +135,21 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         try:
             my_writer.write_table_sync(
-                data_dir + 'simple_csv_invalid_column_order/in/tables/table.csv',
+                '%ssimple_csv_invalid_column_order/in/tables/table.csv'
+                % data_dir,
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_invalid_column_order_table_configuration(),
+                fixtures.get_table_configuration_with_invalid_column_order(),
                 True
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Column order mismatch. Actual configuration: col2, col1. Expected BigQuery: col1, col2.' in str(err)
+            assert 'Column order mismatch. Actual configuration: '\
+                   'col2, col1. Expected BigQuery: col1, col2.'\
+                   in str(err)
 
     def test_invalid_project(self, data_dir):
         bigquery_client = bigquery.Client(
@@ -155,11 +158,11 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         )
 
         my_writer = writer.Writer(bigquery_client)
-        try: 
+        try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                fixtures.get_simple_csv_table_configuration()
+                fixtures.get_table_configuration()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:

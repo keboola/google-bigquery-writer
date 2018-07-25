@@ -1,7 +1,8 @@
 from google.cloud import exceptions
 import google.oauth2.credentials
 import os
-from google_bigquery_writer.bigquery_client_factory import BigqueryClientFactory
+from google_bigquery_writer.bigquery_client_factory \
+    import BigqueryClientFactory
 
 
 class GoogleBigQueryWriterTest(object):
@@ -20,7 +21,7 @@ class GoogleBigQueryWriterTest(object):
             self.bigquery_client = self.bigquery_client_factory.create()
         return self.bigquery_client
 
-    def get_credentials(self): 
+    def get_credentials(self):
         return google.oauth2.credentials.Credentials(
             os.environ.get('OAUTH_ACCESS_TOKEN'),
             token_uri='https://accounts.google.com/o/oauth2/token',

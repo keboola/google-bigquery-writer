@@ -6,7 +6,8 @@ from google.cloud import bigquery
 import json
 import os
 from google_bigquery_writer import schema_mapper
-from google_bigquery_writer.bigquery_client_factory import BigqueryClientFactory
+from google_bigquery_writer.bigquery_client_factory \
+    import BigqueryClientFactory
 
 
 class App:
@@ -51,8 +52,8 @@ class App:
             return
         if action == 'listDatasets':
             self.action_list_datasets()
-            return            
-        raise UserException('Action %s not defined' % (action))
+            return
+        raise UserException('Action %s not defined' % action)
 
     def action_run(self):
         # validate application parameters
@@ -71,12 +72,22 @@ class App:
             if 'export' in table.keys() and table['export'] is False:
                 continue
             if 'items' not in table.keys():
-                message = 'Key \'items\' not defined in \'%s\' table definition.' % table['tableId']
+                message = 'Key \'items\' not defined in ' \
+                          '\'%s\' table definition.'\
+                          % table['tableId']
                 raise UserException(message)
 
-            input_table_mapping = schema_mapper.get_input_table_mapping(self.cfg.get_input_tables(), table['tableId'])
-            incremental = 'incremental' in table.keys() and table['incremental'] is True
-            csv_file_path = self.data_dir + '/in/tables/' + input_table_mapping['destination']
+            input_table_mapping = schema_mapper.get_input_table_mapping(
+                self.cfg.get_input_tables(),
+                table['tableId']
+            )
+            incremental = \
+                'incremental' in table.keys()\
+                and table['incremental'] is True
+            csv_file_path = '%s/in/tables/%s' % (
+                self.data_dir,
+                input_table_mapping['destination']
+            )
 
             print('Loading table %s into BigQuery as %s.%s' % (
                 input_table_mapping['source'],
@@ -93,7 +104,7 @@ class App:
         print('BigQuery Writer finished')
 
     def action_list_projects(self):
-        client = google.cloud.bigquery.client.Client(
+        client = bigquery.client.Client(
             credentials=self.get_credentials(),
             project='dummy'
         )
@@ -109,7 +120,7 @@ class App:
 
     def action_list_datasets(self):
         parameters = self.cfg.get_parameters()
-        client = google.cloud.bigquery.client.Client(
+        client = bigquery.client.Client(
             credentials=self.get_credentials(),
             project=parameters.get('project')
         )
@@ -119,6 +130,7 @@ class App:
                 lambda dataset: {
                     'id': dataset.dataset_id,
                     'name': dataset.dataset_id
-                }, datasets))
+                },
+                datasets))
             )
         )

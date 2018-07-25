@@ -1,7 +1,7 @@
 import os
 
 
-def get_simple_csv_table_configuration() -> dict:
+def get_table_configuration() -> dict:
     return {
         "dbName": os.environ.get('BIGQUERY_TABLE'),
         "items": [
@@ -19,7 +19,7 @@ def get_simple_csv_table_configuration() -> dict:
     }
 
 
-def get_simple_csv_invalid_column_order_table_configuration() -> dict:
+def get_table_configuration_with_invalid_column_order() -> dict:
     return {
         "dbName": os.environ.get('BIGQUERY_TABLE'),
         "items": [
@@ -37,7 +37,7 @@ def get_simple_csv_invalid_column_order_table_configuration() -> dict:
     }
 
 
-def get_simple_csv_table_configuration_with_invalid_datatype() -> dict:
+def get_table_configuration_with_invalid_datatype() -> dict:
     return {
         "dbName": os.environ.get('BIGQUERY_TABLE'),
         "items": [
@@ -55,7 +55,7 @@ def get_simple_csv_table_configuration_with_invalid_datatype() -> dict:
     }
 
 
-def get_simple_csv_table_configuration_with_invalid_table_name() -> dict:
+def get_table_configuration_with_invalid_table_name() -> dict:
     return {
         "dbName": 'invalid-table-name',
         "items": [
@@ -73,7 +73,7 @@ def get_simple_csv_table_configuration_with_invalid_table_name() -> dict:
     }
 
 
-def get_simple_csv_invalid_data_types_table_configuration() -> dict:
+def get_table_configuration_with_invalid_data_type() -> dict:
     return {
         "dbName": os.environ.get('BIGQUERY_TABLE'),
         "items": [
@@ -91,7 +91,7 @@ def get_simple_csv_invalid_data_types_table_configuration() -> dict:
     }
 
 
-def get_simple_csv_with_extra_column_table_configuration() -> dict:
+def get_table_configuration_with_extra_column() -> dict:
     return {
         "dbName": os.environ.get('BIGQUERY_TABLE'),
         "items": [

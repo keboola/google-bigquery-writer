@@ -84,7 +84,8 @@ class Writer(object):
     ) -> bigquery.LoadJob:
         if dataset_name == '' or dataset_name is None:
             raise UserException('Dataset name not specified.')
-        if table_definition['dbName'] == '' or table_definition['dbName'] is None:
+        if table_definition['dbName'] == ''\
+                or table_definition['dbName'] is None:
             raise UserException('Table name not specified.')
 
         columns_schema = schema_mapper.get_schema(table_definition)
@@ -92,10 +93,18 @@ class Writer(object):
             raise UserException('Columns schema not specified.')
 
         csv_schema = schema_mapper.get_csv_schema(csv_file_path)
-        schema_mapper.is_csv_in_match_with_table_definition(table_definition['items'], csv_schema)
+        schema_mapper.is_csv_in_match_with_table_definition(
+            table_definition['items'],
+            csv_schema
+        )
 
         dataset = self.obtain_dataset(dataset_name)
-        table_reference = self.prepare_table(dataset, table_definition['dbName'], columns_schema, incremental)
+        table_reference = self.prepare_table(
+            dataset,
+            table_definition['dbName'],
+            columns_schema,
+            incremental
+        )
 
         with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()

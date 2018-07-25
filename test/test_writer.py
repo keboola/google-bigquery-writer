@@ -20,7 +20,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         job = my_writer.write_table(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         assert job.state == 'RUNNING'
 
@@ -42,7 +42,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration(),
+            fixtures.get_table_configuration(),
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
@@ -63,7 +63,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         client = self.get_client()
         dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
@@ -85,12 +85,12 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         my_writer.write_table_sync(
             csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
 
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
@@ -113,12 +113,12 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         my_writer.write_table_sync(
             csv_file_path,
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration(),
+            fixtures.get_table_configuration(),
             incremental=True
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC, 2 ASC' % (
@@ -144,7 +144,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         my_writer.write_table_sync(
             data_dir + 'newlines/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            fixtures.get_simple_csv_table_configuration()
+            fixtures.get_table_configuration()
         )
         query = 'SELECT * FROM %s.%s ORDER BY 1 ASC' % (
             os.environ.get('BIGQUERY_DATASET'),
