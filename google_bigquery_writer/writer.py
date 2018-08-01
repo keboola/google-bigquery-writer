@@ -15,14 +15,8 @@ class Writer(object):
         try:
             return self.bigquery_client.get_dataset(dataset_reference)
         except bq_exceptions.NotFound:
-            try:
-                dataset_obj = bigquery.Dataset(dataset_reference)
-                return self.bigquery_client.create_dataset(dataset_obj)
-            except bq_exceptions.NotFound:
-                message = 'Project %s was not found.' % (
-                    self.bigquery_client.project
-                )
-                raise UserException(message)
+            dataset_obj = bigquery.Dataset(dataset_reference)
+            return self.bigquery_client.create_dataset(dataset_obj)
         except exceptions.RefreshError:
             message = 'Cannot connect to BigQuery.' \
                       ' Check your access token or refresh token.'
@@ -31,6 +25,24 @@ class Writer(object):
             message = 'Cannot create dataset %s: %s' % (
                 dataset_name,
                 str(err)
+            )
+            raise UserException(message)
+
+    def verify_project(self) -> None:
+        try:
+            projects = self.bigquery_client.list_projects()
+            project_list = list(map(
+                lambda project: project.project_id,
+                projects
+            ))
+        except exceptions.RefreshError:
+            message = 'Cannot connect to BigQuery.' \
+                      ' Check your access token or refresh token.'
+            raise UserException(message)
+
+        if self.bigquery_client.project not in project_list:
+            message = 'Project %s was not found.' % (
+                self.bigquery_client.project
             )
             raise UserException(message)
 
@@ -87,6 +99,8 @@ class Writer(object):
         if table_definition['dbName'] == ''\
                 or table_definition['dbName'] is None:
             raise UserException('Table name not specified.')
+
+        self.verify_project()  # Verify that defined project exists
 
         columns_schema = schema_mapper.get_schema(table_definition)
         if columns_schema is None or len(columns_schema) == 0:
