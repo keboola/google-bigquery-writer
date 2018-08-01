@@ -3,6 +3,7 @@ from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
 import google.oauth2.credentials
 from google.cloud import bigquery
+from google.auth.exceptions import RefreshError
 import json
 import os
 from google_bigquery_writer import schema_mapper
@@ -97,12 +98,17 @@ class App:
                 table['dbName']
             ))
 
-            self.get_writer().write_table_sync(
-                csv_file_path,
-                parameters.get('dataset'),
-                table,
-                incremental=incremental
-            )
+            try:
+                self.get_writer().write_table_sync(
+                    csv_file_path,
+                    parameters.get('dataset'),
+                    table,
+                    incremental=incremental
+                )
+            except RefreshError:
+                message = 'Cannot connect to BigQuery.' \
+                          ' Check your access token or refresh token.'
+                raise UserException(message)
         print('BigQuery Writer finished')
 
     def action_list_projects(self):

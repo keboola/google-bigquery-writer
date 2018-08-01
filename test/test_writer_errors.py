@@ -2,6 +2,7 @@ import pytest
 from google_bigquery_writer import writer, exceptions
 from google.oauth2.credentials import Credentials
 from google.cloud import bigquery
+from google.auth.exceptions import RefreshError
 import os
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
 from test import fixtures
@@ -36,9 +37,11 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
                 fixtures.get_table_configuration()
             )
             pytest.fail('Must raise exception.')
-        except exceptions.UserException as err:
-            assert str(err) == 'Cannot connect to BigQuery.' \
-                ' Check your access token or refresh token or try reauthorizing.'
+        except RefreshError as err:
+            assert str(err) == 'The credentials do not contain the necessary' \
+                               ' fields need to refresh the access token.' \
+                               ' You must specify refresh_token, token_uri,' \
+                               ' client_id, and client_secret.'
 
     def test_write_table_sync_error_too_many_values(self, data_dir):
         my_writer = writer.Writer(self.get_client())
