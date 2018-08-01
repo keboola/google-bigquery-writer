@@ -58,7 +58,7 @@ class TestAppErrors:
             assert str(err) == "Authorization missing."
             pass
 
-    def test_missing_authorization(self, data_dir):
+    def test_invalid_authorization(self, data_dir):
         os.environ['KBC_DATADIR'] = data_dir + "invalid_authorization/"
         application = app.App()
         try:
