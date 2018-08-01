@@ -19,7 +19,7 @@ class Writer(object):
             return self.bigquery_client.create_dataset(dataset_obj)
         except exceptions.RefreshError:
             message = 'Cannot connect to BigQuery.' \
-                      ' Check your access token or refresh token.'
+                      ' Check your access token or refresh token or try reauthorizing.'
             raise UserException(message)
         except bq_exceptions.BadRequest as err:
             message = 'Cannot create dataset %s: %s' % (
@@ -37,7 +37,7 @@ class Writer(object):
             ))
         except exceptions.RefreshError:
             message = 'Cannot connect to BigQuery.' \
-                      ' Check your access token or refresh token.'
+                      ' Check your access token or refresh token or try reauthorizing.'
             raise UserException(message)
 
         if self.bigquery_client.project not in project_list:
