@@ -38,7 +38,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert str(err) == 'Cannot connect to BigQuery.' \
-                ' Check your access token or refresh token.'
+                ' Check your access token or refresh token or try reauthorizing.'
 
     def test_write_table_sync_error_too_many_values(self, data_dir):
         my_writer = writer.Writer(self.get_client())
