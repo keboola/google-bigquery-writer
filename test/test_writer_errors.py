@@ -1,10 +1,10 @@
 import pytest
 from google_bigquery_writer import writer, exceptions
+from google.oauth2.credentials import Credentials
 from google.cloud import bigquery
-import google.cloud.bigquery
-import google.oauth2.credentials
 import os
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
+from test import fixtures
 
 
 class TestWriterErrors(GoogleBigQueryWriterTest):
@@ -13,208 +13,156 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         self.delete_dataset()
 
     def setup_method(self):
+        super(TestWriterErrors, self).setup_method()
         self.delete_dataset()
 
     def test_invalid_token(self, data_dir):
-        credentials = google.oauth2.credentials.Credentials(
-            'access_token',
+        invalid_credentials = Credentials(
+            'access-token',
             token_uri='https://accounts.google.com/o/oauth2/token',
             client_id=os.environ.get('OAUTH_CLIENT_ID'),
             client_secret=os.environ.get('OAUTH_CLIENT_SECRET')
         )
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=credentials
+        bigquery_client = bigquery.Client(
+            os.environ.get('BIGQUERY_PROJECT'),
+            invalid_credentials
         )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('dummy', 'INTEGER')
-        ]
+        my_writer = writer.Writer(bigquery_client)
+
         try:
             my_writer.write_table(
-                csv_file,
+                data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema)
+                fixtures.get_table_configuration()
+            )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert str(err) == 'Cannot connect to BigQuery.' \
                 ' Check your access token or refresh token.'
 
     def test_write_table_sync_error_too_many_values(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
+        my_writer = writer.Writer(self.get_client())
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            fixtures.get_table_configuration()
         )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('column_unknown', 'INTEGER'),
-        ]
         try:
             my_writer.write_table_sync(
-                csv_file,
+                data_dir + 'simple_csv_with_extra_column/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema
+                fixtures.get_table_configuration_with_extra_column(),
+                True
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Too many values in row' in str(err)
 
     def test_write_table_sync_error_missing_values(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
+        my_writer = writer.Writer(self.get_client())
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv_with_extra_column/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            fixtures.get_table_configuration_with_extra_column()
         )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('column_unknown1', 'INTEGER'),
-            bigquery.schema.SchemaField('column_unknown2', 'INTEGER'),
-            bigquery.schema.SchemaField('column_unknown3', 'INTEGER')
-        ]
         try:
             my_writer.write_table_sync(
-                csv_file,
+                data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema
+                fixtures.get_table_configuration(),
+                True
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'contains only 2 columns' in str(err)
 
     def test_write_table_sync_error_invalid_datatype(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
+        my_writer = writer.Writer(self.get_client())
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            fixtures.get_table_configuration()
         )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('col1', 'INTEGER'),
-            bigquery.schema.SchemaField('col2', 'INTEGER'),
-        ]
         try:
             my_writer.write_table_sync(
-                csv_file,
+                data_dir + 'simple_csv_invalid_data_types/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema
+                fixtures.get_table_configuration_with_invalid_data_type(),
+                True
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Could not parse \'val1\' as int for field col1' in str(err)
+            assert 'Could not parse \'val1\' as int for field col2' in str(err)
 
     def test_create_dataset_invalid_name(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('dummy', 'INTEGER')
-        ]
+        my_writer = writer.Writer(self.get_client())
         try:
             my_writer.write_table_sync(
-                csv_file,
+                data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET') + ' INVALID',
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema
+                fixtures.get_table_configuration()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Cannot create dataset' in str(err)
 
     def test_create_table_invalid_name(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('column', 'ANYTHING'),
-        ]
+        my_writer = writer.Writer(self.get_client())
         try:
             my_writer.write_table_sync(
-                csv_file,
+                data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE') + ' INVALID'},
-                schema
+                fixtures.get_table_configuration_with_invalid_table_name()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Cannot create table' in str(err)
 
     def test_create_table_invalid_schema_datatype(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('column', 'ANYTHING'),
-        ]
+        my_writer = writer.Writer(self.get_client())
         try:
             my_writer.write_table_sync(
-                csv_file,
+                data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema
+                fixtures.get_table_configuration_with_invalid_datatype()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'ANYTHING is not a valid value' in str(err)
+            assert 'INVALID-DATATYPE is not a valid value' in str(err)
 
     def test_write_table_sync_with_invalid_column_order(self, data_dir):
-        my_writer = writer.Writer(
-            project=os.environ.get('BIGQUERY_PROJECT'),
-            credentials=self.get_credentials()
-        )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('col1', 'STRING'),
-            bigquery.schema.SchemaField('col2', 'INTEGER')
-        ]
+        my_writer = writer.Writer(self.get_client())
         my_writer.write_table_sync(
-            csv_file,
+            data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
-            {"dbName": os.environ.get('BIGQUERY_TABLE')},
-            schema
+            fixtures.get_table_configuration()
         )
-
-        invalid_schema = [
-            bigquery.schema.SchemaField('col2', 'INTEGER'),
-            bigquery.schema.SchemaField('col1', 'STRING')
-        ]
-
-        invalid_csv_file = open(data_dir + 'simple_csv_invalid_column_order/in/tables/table.csv')
         try:
             my_writer.write_table_sync(
-                invalid_csv_file,
+                '%ssimple_csv_invalid_column_order/in/tables/table.csv'
+                % data_dir,
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                invalid_schema,
+                fixtures.get_table_configuration_with_invalid_column_order(),
                 True
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Column order mismatch. Actual configuration: col2, col1, BigQuery expected: col1, col2.' in str(err)
+            assert 'Column order mismatch. Actual configuration: '\
+                   'col2, col1. Expected BigQuery: col1, col2.'\
+                   in str(err)
 
     def test_invalid_project(self, data_dir):
-        my_writer = writer.Writer(
-            project='invalid-project',
-            credentials=self.get_credentials()
+        bigquery_client = bigquery.Client(
+            'invalid-project',
+            self.get_credentials()
         )
-        csv_file = open(data_dir + 'simple_csv/in/tables/table.csv')
-        schema = [
-            bigquery.schema.SchemaField('col1', 'STRING'),
-            bigquery.schema.SchemaField('col2', 'INTEGER')
-        ]
-        try: 
-            job = my_writer.write_table_sync(
-                csv_file,
+
+        my_writer = writer.Writer(bigquery_client)
+        try:
+            my_writer.write_table_sync(
+                data_dir + 'simple_csv/in/tables/table.csv',
                 os.environ.get('BIGQUERY_DATASET'),
-                {"dbName": os.environ.get('BIGQUERY_TABLE')},
-                schema
+                fixtures.get_table_configuration()
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:

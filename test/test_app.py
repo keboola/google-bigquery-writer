@@ -9,12 +9,13 @@ from google_bigquery_writer.exceptions import UserException
 import pytest
 from google.cloud import bigquery
 
-class TestApp(GoogleBigQueryWriterTest):
 
+class TestApp(GoogleBigQueryWriterTest):
     def teardown_method(self):
         self.delete_dataset()
 
     def setup_method(self):
+        super(TestApp, self).setup_method()
         self.delete_dataset()
 
     def prepare(self, action="run", data_dir=None):
@@ -74,18 +75,23 @@ class TestApp(GoogleBigQueryWriterTest):
         )
 
     def test_run_with_no_items_throws_user_exception(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + 'config_without_items/'
         self.prepare(action="run", data_dir=data_dir)
-        application = app.App(data_dir + 'config_without_items/')
+        application = app.App()
         try:
             application.run()
             pytest.fail('Must raise exception')
         except UserException as err:
-            assert str(err) == 'Missing input mapping for table in.c-bucket.table1.'
+            assert str(err) ==\
+                   'Key \'items\' not defined in ' \
+                   '\'in.c-bucket.table1\' table definition.'
 
     def test_successful_run(self, data_dir, capsys):
+        os.environ['KBC_DATADIR'] = "%ssample_populated/"\
+                                    % data_dir
         self.prepare(action="run", data_dir=data_dir)
         # run app
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
 
         # assertions
@@ -106,13 +112,18 @@ class TestApp(GoogleBigQueryWriterTest):
         assert len(datasets) >= 1
         # todo find the required dataset
         matching_datasets = list(filter(
-            lambda dataset: dataset.dataset_id == os.environ.get('BIGQUERY_DATASET'), datasets
+            lambda dataset:
+                dataset.dataset_id == os.environ.get(
+                    'BIGQUERY_DATASET'
+                ),
+            datasets
         ))
 
         assert len(matching_datasets) == 1
-        assert matching_datasets[0].dataset_id == os.environ.get('BIGQUERY_DATASET')
+        assert matching_datasets[0].dataset_id == \
+            os.environ.get('BIGQUERY_DATASET')
 
-        tables = list(client.list_tables(matching_datasets[0].reference)) #list(matching_datasets[0].list_tables())
+        tables = list(client.list_tables(matching_datasets[0].reference))
         assert len(tables) == 2
         assert tables[0].reference.table_id == 'table1'
         assert tables[1].reference.table_id == 'table2'
@@ -179,7 +190,7 @@ class TestApp(GoogleBigQueryWriterTest):
         assert len(row_data) == 3
 
         # run app second time (increments)
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
 
         query = 'SELECT * FROM %s.%s' % (
@@ -209,8 +220,9 @@ class TestApp(GoogleBigQueryWriterTest):
             )
 
     def test_list_projects(self, data_dir, capsys):
+        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
         self.prepare(action="listProjects", data_dir=data_dir)
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
         out, err = capsys.readouterr()
         assert err == ''
@@ -221,13 +233,17 @@ class TestApp(GoogleBigQueryWriterTest):
         )
 
     def test_list_datasets(self, data_dir, capsys):
+        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
         client = self.get_client()
-        dataset_reference = bigquery.DatasetReference(os.environ.get('BIGQUERY_PROJECT'), os.environ.get('BIGQUERY_DATASET'))
+        dataset_reference = bigquery.DatasetReference(
+            os.environ.get('BIGQUERY_PROJECT'),
+            os.environ.get('BIGQUERY_DATASET')
+        )
         dataset = bigquery.Dataset(dataset_reference)
         client.create_dataset(dataset)
 
         self.prepare(action="listDatasets", data_dir=data_dir)
-        application = app.App(data_dir + "sample_populated/")
+        application = app.App()
         application.run()
         out, err = capsys.readouterr()
         assert err == ''

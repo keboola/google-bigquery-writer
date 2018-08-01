@@ -1,13 +1,13 @@
 import sys
 import traceback
-from google_bigquery_writer.exceptions import UserException, ApplicationException
+from google_bigquery_writer.exceptions \
+    import UserException, ApplicationException
 from google_bigquery_writer.app import App
-import argparse
 
 
-def main(args):
+def main():
     try:
-        application = App(data_dir=args.data_dir)
+        application = App()
         application.run()
         sys.exit(0)
     except UserException as err:
@@ -25,8 +25,6 @@ def main(args):
         traceback.print_exc(file=sys.stderr)
         sys.exit(2)
 
+
 if __name__ == '__main__':
-    argparser = argparse.ArgumentParser()
-    argparser.add_argument('-d', '--data', dest='data_dir')
-    args = argparser.parse_args()
-    main(args)
+    main()

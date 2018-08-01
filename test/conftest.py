@@ -4,7 +4,12 @@ import pytest
 
 
 def pytest_addoption(parser):
-    parser.addoption("--data-dir", action="store", default="/home/test/data/", help="Data directory")
+    parser.addoption(
+        "--data-dir",
+        action="store",
+        default="/home/test/data/",
+        help="Data directory"
+    )
 
 
 @pytest.fixture
