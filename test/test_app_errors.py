@@ -65,7 +65,6 @@ class TestAppErrors:
             application.run()
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
-            assert str(err) == "Cannot connect to BigQuery. Check your" \
-                               " access token or refresh token or" \
-                               " try reauthorizing."
+            assert str(err) == 'Cannot connect to BigQuery.' \
+                               ' Please try reauthorizing.'
             pass
