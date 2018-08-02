@@ -47,3 +47,23 @@ class TestAppErrors:
             assert str(err) == \
                    "There are no tables specified in the configuration."
             pass
+
+    def test_missing_authorization(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + "missing_authorization/"
+        application = app.App()
+        try:
+            application.run()
+            pytest.fail("Must raise exception.")
+        except exceptions.UserException as err:
+            assert str(err) == "Authorization missing."
+            pass
+
+    def test_invalid_authorization(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + "invalid_authorization/"
+        application = app.App()
+        try:
+            application.run()
+            pytest.fail("Must raise exception.")
+        except exceptions.UserException as err:
+            assert str(err) == "Cannot connect to BigQuery. Check your access token or refresh token or try reauthorizing."
+            pass

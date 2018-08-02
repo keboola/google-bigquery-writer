@@ -1,0 +1,58 @@
+{
+  "parameters": {
+    "project": "dummy",
+    "dataset": "dummy",
+    "tables": [
+      {
+        "dbName": "table1",
+        "export": true,
+        "tableId": "in.c-bucket.table1",
+        "items": [
+          {
+            "name": "string",
+            "dbName": "string",
+            "type": "STRING"
+          },
+          {
+            "name": "integer",
+            "dbName": "integer",
+            "type": "INTEGER"
+          },
+          {
+            "name": "float",
+            "dbName": "float",
+            "type": "FLOAT"
+          },
+          {
+            "name": "boolean",
+            "dbName": "boolean",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "timestamp",
+            "dbName": "timestamp",
+            "type": "TIMESTAMP"
+          }
+        ]
+      }
+    ]
+  },
+  "storage": {
+    "input": {
+      "tables": [
+        {
+          "source": "in.c-bucket.table1",
+          "destination": "in.c-bucket.table1.csv",
+          "columns": [
+            "string",
+            "integer",
+            "float",
+            "boolean",
+            "timestamp"
+          ]
+        }
+      ]
+    }
+  },
+  "action": "run"
+}

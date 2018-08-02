@@ -7,7 +7,7 @@
 ## Set up
 
 ```
-docker-compose Build
+docker-compose build
 ```
 
 ## Development

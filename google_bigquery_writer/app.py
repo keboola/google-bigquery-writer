@@ -18,6 +18,8 @@ class App:
 
     def get_credentials(self):
         oauthapi_data = self.cfg.get_oauthapi_data()
+        if oauthapi_data == {}:
+            raise UserException('Authorization missing.')
         return google.oauth2.credentials.Credentials(
             oauthapi_data.get('access_token'),
             token_uri='https://accounts.google.com/o/oauth2/token',
