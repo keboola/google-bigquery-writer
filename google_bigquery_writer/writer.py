@@ -1,5 +1,4 @@
 from google.cloud import bigquery, exceptions as bq_exceptions
-from google.auth import exceptions
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
 import time
@@ -17,10 +16,6 @@ class Writer(object):
         except bq_exceptions.NotFound:
             dataset_obj = bigquery.Dataset(dataset_reference)
             return self.bigquery_client.create_dataset(dataset_obj)
-        except exceptions.RefreshError:
-            message = 'Cannot connect to BigQuery.' \
-                      ' Check your access token or refresh token or try reauthorizing.'
-            raise UserException(message)
         except bq_exceptions.BadRequest as err:
             message = 'Cannot create dataset %s: %s' % (
                 dataset_name,
@@ -29,16 +24,11 @@ class Writer(object):
             raise UserException(message)
 
     def verify_project(self) -> None:
-        try:
-            projects = self.bigquery_client.list_projects()
-            project_list = list(map(
-                lambda project: project.project_id,
-                projects
-            ))
-        except exceptions.RefreshError:
-            message = 'Cannot connect to BigQuery.' \
-                      ' Check your access token or refresh token or try reauthorizing.'
-            raise UserException(message)
+        projects = self.bigquery_client.list_projects()
+        project_list = list(map(
+            lambda project: project.project_id,
+            projects
+        ))
 
         if self.bigquery_client.project not in project_list:
             message = 'Project %s was not found.' % (
