@@ -107,7 +107,8 @@ class App:
                 )
             except RefreshError:
                 message = 'Cannot connect to BigQuery.' \
-                          ' Check your access token or refresh token.'
+                          ' Check your access token or refresh' \
+                          ' token or try reauthorizing.'
                 raise UserException(message)
         print('BigQuery Writer finished')
 
