@@ -1,0 +1,12 @@
+{
+    "parameters": {
+        "dataset": "sample-schema",
+        "items": [
+            {
+                "dbName": "table1",
+                "export": true,
+                "tableId": "in.c-bucket.table1"
+            }
+        ]
+    }
+}

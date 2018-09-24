@@ -1,0 +1,12 @@
+{
+    "parameters": {
+        "project": "sample-project",
+        "items": [
+            {
+                "dbName": "table1",
+                "export": true,
+                "tableId": "in.c-bucket.table1"
+            }
+        ]
+    }
+}

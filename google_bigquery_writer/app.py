@@ -47,6 +47,15 @@ class App:
 
     def run(self):
         action = self.cfg.get_action()
+
+        parameters = self.cfg.get_parameters()
+        if parameters.get('dataset') is None or parameters.get('dataset') == '':
+            message = 'Google BigQuery dataset not specified in the configuration.'
+            raise UserException(message)
+        if parameters.get('project') is None or parameters.get('project') == '':
+            message = 'Google BigQuery project not specified in the configuration.'
+            raise UserException(message)
+
         if action == 'run' or action is None or action == '':
             self.action_run()
             return
