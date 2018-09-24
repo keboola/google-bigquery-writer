@@ -37,17 +37,6 @@ class TestAppErrors:
             assert str(err) == "Action invalid not defined"
             pass
 
-    def test_invalid_parameters(self, data_dir):
-        os.environ['KBC_DATADIR'] = data_dir + "invalid_parameters_type/"
-        application = app.App()
-        try:
-            application.run()
-            pytest.fail("Must raise exception.")
-        except exceptions.UserException as err:
-            assert str(err) == \
-                   "There are no tables specified in the configuration."
-            pass
-
     def test_missing_authorization(self, data_dir):
         os.environ['KBC_DATADIR'] = data_dir + "missing_authorization/"
         application = app.App()
