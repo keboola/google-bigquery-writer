@@ -12,8 +12,7 @@ class TestAppErrors:
             application.run()
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
-            assert str(err) == "There are no tables "\
-                "specified in the configuration."
+            assert str(err) == "Configuration is empty."
             pass
 
     def test_missing_input(self, data_dir):

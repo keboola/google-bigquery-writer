@@ -49,6 +49,9 @@ class App:
         action = self.cfg.get_action()
 
         parameters = self.cfg.get_parameters()
+        if len(parameters) == 0:
+            message = 'Configuration is empty.'
+            raise UserException(message)
         if parameters.get('dataset') is None or parameters.get('dataset') == '':
             message = 'Google BigQuery dataset not specified in the configuration.'
             raise UserException(message)
