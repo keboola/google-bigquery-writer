@@ -1,8 +1,7 @@
 {
     "parameters": {
         "project": "sample-project",
-        "dataset": "sample-schema",
-        "tables": [
+        "items": [
             {
                 "dbName": "table1",
                 "export": true,
