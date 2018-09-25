@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 export KBC_DATA_DIR=/home/test/data
 cd /home/
