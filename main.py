@@ -11,19 +11,19 @@ def main():
         application.run()
         sys.exit(0)
     except UserException as err:
-        message = 'User exception: %s' % err
+        message = '%s' % err
         print(message, file=sys.stderr)
         sys.exit(1)
     except ApplicationException as err:
-        message = 'Application exception: %s' % err
+        message = '%s' % err
         print(message, file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         sys.exit(2)
     except Exception as err:
-        message = 'Unhandled exception: %s' % err
+        message = '%s' % err
         print(message, file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
-        sys.exit(2)
+        sys.exit(3)
 
 
 if __name__ == '__main__':
