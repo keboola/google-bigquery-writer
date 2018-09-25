@@ -52,15 +52,11 @@ class App:
         if len(parameters) == 0:
             message = 'Configuration is empty.'
             raise UserException(message)
-        if parameters.get('dataset') is None or \
-                parameters.get('dataset') == '':
-            message = \
-                'Google BigQuery dataset not specified in the configuration.'
+        if parameters.get('dataset') is None or parameters.get('dataset') == '':
+            message = 'Google BigQuery dataset not specified in the configuration.'
             raise UserException(message)
-        if parameters.get('project') is None or \
-                parameters.get('project') == '':
-            message = \
-                'Google BigQuery project not specified in the configuration.'
+        if parameters.get('project') is None or parameters.get('project') == '':
+            message = 'Google BigQuery project not specified in the configuration.'
             raise UserException(message)
 
         if action == 'run' or action is None or action == '':

@@ -44,8 +44,7 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == \
-                   "Google BigQuery project " \
-                   "not specified in the configuration."
+                   "Google BigQuery project not specified in the configuration."
             pass
 
     def test_empty_project(self, data_dir):
@@ -56,8 +55,7 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == \
-                   "Google BigQuery project " \
-                   "not specified in the configuration."
+                   "Google BigQuery project not specified in the configuration."
             pass
 
     def test_missing_dataset(self, data_dir):
@@ -68,8 +66,7 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == \
-                   "Google BigQuery dataset " \
-                   "not specified in the configuration."
+                   "Google BigQuery dataset not specified in the configuration."
             pass
 
     def test_empty_dataset(self, data_dir):
@@ -80,8 +77,7 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == \
-                   "Google BigQuery dataset " \
-                   "not specified in the configuration."
+                   "Google BigQuery dataset not specified in the configuration."
             pass
 
     def test_missing_authorization(self, data_dir):
