@@ -248,4 +248,3 @@ class TestApp(GoogleBigQueryWriterTest):
             lambda dataset: dataset['id'],
             project['datasets']
         )
-
