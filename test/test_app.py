@@ -219,21 +219,7 @@ class TestApp(GoogleBigQueryWriterTest):
                 os.environ.get('BIGQUERY_DATASET')
             )
 
-    def test_list_projects(self, data_dir, capsys):
-        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
-        self.prepare(action="listProjects", data_dir=data_dir)
-        application = app.App()
-        application.run()
-        out, err = capsys.readouterr()
-        assert err == ''
-        data = json.loads(out)
-        assert os.environ.get('BIGQUERY_PROJECT') in map(
-            lambda project: project['id'],
-            data
-        )
-
-    def test_list_datasets(self, data_dir, capsys):
-        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
+    def test_list(self, data_dir, capsys):
         client = self.get_client()
         dataset_reference = bigquery.DatasetReference(
             os.environ.get('BIGQUERY_PROJECT'),
@@ -242,14 +228,24 @@ class TestApp(GoogleBigQueryWriterTest):
         dataset = bigquery.Dataset(dataset_reference)
         client.create_dataset(dataset)
 
-        self.prepare(action="listDatasets", data_dir=data_dir)
+        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
+        self.prepare(action="list", data_dir=data_dir)
         application = app.App()
         application.run()
         out, err = capsys.readouterr()
         assert err == ''
         data = json.loads(out)
-        assert 1 <= len(data)
+        assert 'projects' in data.keys()
+        assert os.environ.get('BIGQUERY_PROJECT') in map(
+            lambda project: project['id'],
+            data['projects']
+        )
+        project = list(filter(
+            lambda project: project['id'] == os.environ.get('BIGQUERY_PROJECT'),
+            data['projects']
+        ))[0]
         assert os.environ.get('BIGQUERY_DATASET') in map(
             lambda dataset: dataset['id'],
-            data
+            project['datasets']
         )
+
