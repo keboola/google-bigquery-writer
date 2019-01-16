@@ -62,12 +62,6 @@ class App:
         if action == 'run' or action is None or action == '':
             self.action_run()
             return
-        if action == 'listProjects':
-            self.action_list_projects()
-            return
-        if action == 'listDatasets':
-            self.action_list_datasets()
-            return
         if action == 'list':
             self.action_list()
             return
