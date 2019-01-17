@@ -62,11 +62,8 @@ class App:
         if action == 'run' or action is None or action == '':
             self.action_run()
             return
-        if action == 'listProjects':
-            self.action_list_projects()
-            return
-        if action == 'listDatasets':
-            self.action_list_datasets()
+        if action == 'list':
+            self.action_list()
             return
         raise UserException('Action %s not defined' % action)
 
@@ -123,34 +120,31 @@ class App:
                 raise UserException(message)
         print('BigQuery Writer finished')
 
-    def action_list_projects(self):
+    def action_list(self):
         client = bigquery.client.Client(
             credentials=self.get_credentials(),
             project='dummy'
         )
+        response = {
+            'projects': []
+        }
         projects = list(client.list_projects())
-        print(json.dumps(
-            list(map(
-                lambda project: {
-                    'id': project.project_id,
-                    'name': project.friendly_name
-                }, projects))
+        for project in projects:
+            client = bigquery.client.Client(
+                credentials=self.get_credentials(),
+                project=project.project_id
             )
-        )
+            datasets = list(client.list_datasets())
+            response['projects'].append({
+                'id': project.project_id,
+                'name': project.friendly_name,
+                'datasets': list(map(
+                    lambda dataset: {
+                        'id': dataset.dataset_id,
+                        'name': dataset.dataset_id
+                    },
+                    datasets
+                ))
+            })
 
-    def action_list_datasets(self):
-        parameters = self.cfg.get_parameters()
-        client = bigquery.client.Client(
-            credentials=self.get_credentials(),
-            project=parameters.get('project')
-        )
-        datasets = list(client.list_datasets())
-        print(json.dumps(
-            list(map(
-                lambda dataset: {
-                    'id': dataset.dataset_id,
-                    'name': dataset.dataset_id
-                },
-                datasets))
-            )
-        )
+        print(json.dumps(response))

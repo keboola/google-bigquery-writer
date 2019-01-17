@@ -34,3 +34,26 @@ To run a specific test, run
 ```
 docker-compose run --rm tests py.test -k my_test
 ```
+
+## Actions
+
+### list
+
+`list` action returns a list of projects and datasets in this format
+
+```json
+{
+    "projects": [
+        {
+            "id": "bigquery-writer-158018",
+            "name": "BigQuery Writer",
+            "datasets": [
+                {
+                    "id": "travis_test",
+                    "name": "travis_test"
+                }
+            ]
+        }
+    ]
+}
+```
