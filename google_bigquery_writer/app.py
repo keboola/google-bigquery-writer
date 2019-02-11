@@ -9,6 +9,7 @@ import os
 from google_bigquery_writer import schema_mapper
 from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
+from google.oauth2 import service_account
 
 
 class App:
@@ -18,16 +19,46 @@ class App:
         self.writer = None
 
     def get_credentials(self):
-        oauthapi_data = self.cfg.get_oauthapi_data()
-        if oauthapi_data == {}:
-            raise UserException('Authorization missing.')
-        return google.oauth2.credentials.Credentials(
-            oauthapi_data.get('access_token'),
-            token_uri='https://accounts.google.com/o/oauth2/token',
-            client_id=self.cfg.get_oauthapi_appkey(),
-            client_secret=self.cfg.get_oauthapi_appsecret(),
-            refresh_token=oauthapi_data.get('refresh_token')
-        )
+        if (
+                self.cfg.get_parameters().get('#private_key') or
+                self.cfg.get_parameters().get('client_email')
+        ):
+            # service account
+            private_key = self.cfg.get_parameters().get('#private_key')
+            if private_key == '' or private_key is None:
+                raise UserException('Private key missing.')
+
+            client_email = self.cfg.get_parameters().get('client_email')
+            if client_email == '' or client_email is None:
+                raise UserException('Client email missing.')
+
+            # replace all escaped newline characters
+            service_account_info = {
+                'private_key': private_key.replace('\\n', '\n'),
+                'client_email': client_email,
+                'token_uri': 'https://oauth2.googleapis.com/token'
+            }
+
+            scopes = [
+                'https://www.googleapis.com/auth/bigquery'
+            ]
+            return service_account.Credentials.from_service_account_info(
+                service_account_info,
+                scopes=scopes
+            )
+
+        else:
+            # oauth
+            oauthapi_data = self.cfg.get_oauthapi_data()
+            if oauthapi_data == {}:
+                raise UserException('Authorization missing.')
+            return google.oauth2.credentials.Credentials(
+                oauthapi_data.get('access_token'),
+                token_uri='https://accounts.google.com/o/oauth2/token',
+                client_id=self.cfg.get_oauthapi_appkey(),
+                client_secret=self.cfg.get_oauthapi_appsecret(),
+                refresh_token=oauthapi_data.get('refresh_token')
+            )
 
     def get_writer(self):
         """

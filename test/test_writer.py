@@ -15,8 +15,9 @@ class TestWriter(GoogleBigQueryWriterTest):
         super(TestWriter, self).setup_method()
         self.delete_dataset()
 
-    def test_write_table_async(self, data_dir):
-        my_writer = writer.Writer(self.get_client())
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_async(self, data_dir, credentials_type):
+        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
         job = my_writer.write_table(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -24,7 +25,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         )
         assert job.state == 'RUNNING'
 
-        client = self.get_client()
+        client = self.get_client(credentials_type=credentials_type)
         dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
         try:
             dataset = client.get_dataset(dataset_reference)
@@ -37,8 +38,9 @@ class TestWriter(GoogleBigQueryWriterTest):
         except exceptions.NotFound:
             pytest.fail('Must not raise an exception.')
 
-    def test_write_table_sync(self, data_dir):
-        my_writer = writer.Writer(self.get_client())
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_sync(self, data_dir, credentials_type):
+        my_writer = writer.Writer(self.get_client(credentials_type))
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -48,7 +50,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client()
+        client = self.get_client(credentials_type)
         query_job = client.query(query)
         row_data = list(query_job)
 
@@ -58,14 +60,15 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[1].col1 == 'val2'
         assert row_data[1].col2 == 2
 
-    def test_write_table_schema(self, data_dir):
-        my_writer = writer.Writer(self.get_client())
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_schema(self, data_dir, credentials_type):
+        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
             fixtures.get_table_configuration()
         )
-        client = self.get_client()
+        client = self.get_client(credentials_type=credentials_type)
         dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
         table_reference = dataset.table(os.environ.get('BIGQUERY_TABLE'))
         table = client.get_table(table_reference)
@@ -79,8 +82,9 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert table.schema[1].mode == 'NULLABLE'
         assert table.schema[1].name == 'col2'
 
-    def test_write_table_sync_overwrite(self, data_dir):
-        my_writer = writer.Writer(self.get_client())
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_sync_overwrite(self, data_dir, credentials_type):
+        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
         csv_file_path = data_dir + 'simple_csv/in/tables/table.csv'
         my_writer.write_table_sync(
             csv_file_path,
@@ -97,7 +101,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client()
+        client = self.get_client(credentials_type=credentials_type)
         query_job = client.query(query)
 
         row_data = list(query_job)
@@ -107,8 +111,9 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[1].col1 == 'val2'
         assert row_data[1].col2 == 2
 
-    def test_write_table_sync_append(self, data_dir):
-        my_writer = writer.Writer(self.get_client())
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_sync_append(self, data_dir, credentials_type):
+        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
         csv_file_path = data_dir + 'simple_csv/in/tables/table.csv'
         my_writer.write_table_sync(
             csv_file_path,
@@ -125,7 +130,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client()
+        client = self.get_client(credentials_type=credentials_type)
         query_job = client.query(query)
 
         row_data = list(query_job)
@@ -139,8 +144,9 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[3].col1 == 'val2'
         assert row_data[3].col2 == 2
 
-    def test_write_table_sync_newlines(self, data_dir):
-        my_writer = writer.Writer(self.get_client())
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_sync_newlines(self, data_dir, credentials_type):
+        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
         my_writer.write_table_sync(
             data_dir + 'newlines/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -150,7 +156,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client()
+        client = self.get_client(credentials_type=credentials_type)
         query_job = client.query(query)
 
         row_data = list(query_job)

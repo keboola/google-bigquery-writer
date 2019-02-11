@@ -100,3 +100,5 @@ class TestAppErrors:
             assert str(err) == 'Cannot connect to BigQuery.' \
                                ' Please try reauthorizing.'
             pass
+
+    # TODO invalid service account

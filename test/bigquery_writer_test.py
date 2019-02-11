@@ -3,6 +3,7 @@ import google.oauth2.credentials
 import os
 from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
+from google.oauth2 import service_account
 
 
 class GoogleBigQueryWriterTest(object):
@@ -10,18 +11,40 @@ class GoogleBigQueryWriterTest(object):
     bigquery_client = None
 
     def setup_method(self):
-        self.bigquery_client_factory = BigqueryClientFactory(
-            os.environ.get('BIGQUERY_PROJECT'),
-            self.get_credentials()
-        )
         self.bigquery_client = None
 
-    def get_client(self):
+    def get_client(self, credentials_type='service_account'):
         if self.bigquery_client is None:
+            if credentials_type == 'oauth':
+                credentials = self.get_oauth_credentials()
+            elif credentials_type == 'service_account':
+                credentials = self.get_service_account_credentials()
+            else:
+                raise Exception('Unknown credentials type ' + credentials_type)
+
+            self.bigquery_client_factory = BigqueryClientFactory(
+                os.environ.get('BIGQUERY_PROJECT'),
+                credentials
+            )
             self.bigquery_client = self.bigquery_client_factory.create()
         return self.bigquery_client
 
-    def get_credentials(self):
+    def get_service_account_credentials(self):
+        service_account_info = {
+            'private_key': os.environ.get('SERVICE_ACCOUNT_PRIVATE_KEY').replace('\\n', '\n'),
+            'client_email': os.environ.get('SERVICE_ACCOUNT_CLIENT_EMAIL'),
+            'token_uri': 'https://oauth2.googleapis.com/token'
+        }
+
+        scopes = [
+            'https://www.googleapis.com/auth/bigquery'
+        ]
+        return service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=scopes
+        )
+
+    def get_oauth_credentials(self):
         return google.oauth2.credentials.Credentials(
             os.environ.get('OAUTH_ACCESS_TOKEN'),
             token_uri='https://accounts.google.com/o/oauth2/token',
