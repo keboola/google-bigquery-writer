@@ -30,9 +30,12 @@ class TestApp(GoogleBigQueryWriterTest):
             data = json.load(source_config_file)
 
         if credentials_type == 'service_account':
-            data['parameters']['#private_key'] = os.environ.get('SERVICE_ACCOUNT_PRIVATE_KEY')
-            data['parameters']['client_email'] = os.environ.get('SERVICE_ACCOUNT_CLIENT_EMAIL')
-
+            service_account_info = json.loads(os.environ.get('SERVICE_ACCOUNT_USER'))
+            data['parameters']['service_account'] = {
+                '#private_key': service_account_info['private_key'],
+                'client_email': service_account_info['client_email'],
+                'token_uri': service_account_info['token_uri'],
+            }
         elif credentials_type == 'oauth':
             oauth = {
                 'access_token': os.environ.get('OAUTH_ACCESS_TOKEN'),
@@ -114,7 +117,7 @@ class TestApp(GoogleBigQueryWriterTest):
                 os.environ.get('BIGQUERY_DATASET')
             )
 
-        client = self.get_client(credentials_type=credentials_type)
+        client = self.get_client('service_account_manage')
 
         # check for only the testing dataset
         datasets = list(client.list_datasets())
@@ -230,7 +233,7 @@ class TestApp(GoogleBigQueryWriterTest):
 
     @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
     def test_list(self, data_dir, capsys, credentials_type):
-        client = self.get_client(credentials_type=credentials_type)
+        client = self.get_client('service_account_manage')
         dataset_reference = bigquery.DatasetReference(
             os.environ.get('BIGQUERY_PROJECT'),
             os.environ.get('BIGQUERY_DATASET')

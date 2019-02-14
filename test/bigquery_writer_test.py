@@ -4,6 +4,7 @@ import os
 from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
 from google.oauth2 import service_account
+import json
 
 
 class GoogleBigQueryWriterTest(object):
@@ -18,7 +19,9 @@ class GoogleBigQueryWriterTest(object):
             if credentials_type == 'oauth':
                 credentials = self.get_oauth_credentials()
             elif credentials_type == 'service_account':
-                credentials = self.get_service_account_credentials()
+                credentials = self.get_service_account_user_credentials()
+            elif credentials_type == 'service_account_manage':
+                credentials = self.get_service_account_manage_credentials()
             else:
                 raise Exception('Unknown credentials type ' + credentials_type)
 
@@ -29,13 +32,18 @@ class GoogleBigQueryWriterTest(object):
             self.bigquery_client = self.bigquery_client_factory.create()
         return self.bigquery_client
 
-    def get_service_account_credentials(self):
-        service_account_info = {
-            'private_key': os.environ.get('SERVICE_ACCOUNT_PRIVATE_KEY').replace('\\n', '\n'),
-            'client_email': os.environ.get('SERVICE_ACCOUNT_CLIENT_EMAIL'),
-            'token_uri': 'https://oauth2.googleapis.com/token'
-        }
+    def get_service_account_manage_credentials(self):
+        service_account_info = json.loads(os.environ.get('SERVICE_ACCOUNT_MANAGE'))
+        scopes = [
+            'https://www.googleapis.com/auth/bigquery'
+        ]
+        return service_account.Credentials.from_service_account_info(
+            service_account_info,
+            scopes=scopes
+        )
 
+    def get_service_account_user_credentials(self):
+        service_account_info = json.loads(os.environ.get('SERVICE_ACCOUNT_USER'))
         scopes = [
             'https://www.googleapis.com/auth/bigquery'
         ]
@@ -54,7 +62,7 @@ class GoogleBigQueryWriterTest(object):
         )
 
     def delete_dataset(self):
-        client = self.get_client()
+        client = self.get_client('service_account_manage')
         dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
 
         try:

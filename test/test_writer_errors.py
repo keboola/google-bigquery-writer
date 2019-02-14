@@ -161,10 +161,16 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
                    'col2, col1. Expected BigQuery: col1, col2.'\
                    in str(err)
 
-    def test_invalid_project(self, data_dir):
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_invalid_project(self, data_dir, credentials_type):
+        if (credentials_type == 'service_account'):
+            credentials = self.get_service_account_user_credentials()
+        else:
+            credentials = self.get_oauth_credentials()
+
         bigquery_client = bigquery.Client(
             'invalid-project',
-            self.get_service_account_credentials()
+            credentials
         )
 
         my_writer = writer.Writer(bigquery_client)

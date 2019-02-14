@@ -19,24 +19,28 @@ class App:
         self.writer = None
 
     def get_credentials(self):
+        parameters = self.cfg.get_parameters()
         if (
-                self.cfg.get_parameters().get('#private_key') or
-                self.cfg.get_parameters().get('client_email')
+                parameters.get('service_account')
         ):
             # service account
-            private_key = self.cfg.get_parameters().get('#private_key')
+            private_key = parameters.get('service_account').get('#private_key')
             if private_key == '' or private_key is None:
-                raise UserException('Private key missing.')
+                raise UserException('Service account private key missing.')
 
-            client_email = self.cfg.get_parameters().get('client_email')
+            client_email = parameters.get('service_account').get('client_email')
             if client_email == '' or client_email is None:
-                raise UserException('Client email missing.')
+                raise UserException('Service account client email missing.')
+
+            token_uri = parameters.get('service_account').get('token_uri')
+            if token_uri == '' or token_uri is None:
+                raise UserException('Service account token URI missing.')
 
             # replace all escaped newline characters
             service_account_info = {
                 'private_key': private_key.replace('\\n', '\n'),
                 'client_email': client_email,
-                'token_uri': 'https://oauth2.googleapis.com/token'
+                'token_uri': token_uri
             }
 
             scopes = [
@@ -48,7 +52,7 @@ class App:
             )
 
         else:
-            # oauth
+            # fallback to oauth
             oauthapi_data = self.cfg.get_oauthapi_data()
             if oauthapi_data == {}:
                 raise UserException('Authorization missing.')

@@ -25,7 +25,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         )
         assert job.state == 'RUNNING'
 
-        client = self.get_client(credentials_type=credentials_type)
+        client = self.get_client('service_account_manage')
         dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
         try:
             dataset = client.get_dataset(dataset_reference)
@@ -50,7 +50,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client(credentials_type)
+        client = self.get_client('service_account_manage')
         query_job = client.query(query)
         row_data = list(query_job)
 
@@ -68,7 +68,8 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             fixtures.get_table_configuration()
         )
-        client = self.get_client(credentials_type=credentials_type)
+
+        client = self.get_client('service_account_manage')
         dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
         table_reference = dataset.table(os.environ.get('BIGQUERY_TABLE'))
         table = client.get_table(table_reference)
@@ -101,7 +102,8 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client(credentials_type=credentials_type)
+
+        client = self.get_client('service_account_manage')
         query_job = client.query(query)
 
         row_data = list(query_job)
@@ -130,7 +132,8 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client(credentials_type=credentials_type)
+
+        client = self.get_client('service_account_manage')
         query_job = client.query(query)
 
         row_data = list(query_job)
@@ -156,7 +159,8 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             os.environ.get('BIGQUERY_TABLE')
         )
-        client = self.get_client(credentials_type=credentials_type)
+
+        client = self.get_client('service_account_manage')
         query_job = client.query(query)
 
         row_data = list(query_job)
