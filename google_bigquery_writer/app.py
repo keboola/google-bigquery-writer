@@ -153,6 +153,8 @@ class App:
                 message = 'Cannot connect to BigQuery.' \
                           ' Please try reauthorizing.'
                 raise UserException(message)
+            except google.api_core.exceptions.Forbidden as err:
+                raise UserException(err.message)
         print('BigQuery Writer finished')
 
     def action_list(self):
@@ -163,23 +165,31 @@ class App:
         response = {
             'projects': []
         }
-        projects = list(client.list_projects())
-        for project in projects:
-            client = bigquery.client.Client(
-                credentials=self.get_credentials(),
-                project=project.project_id
-            )
-            datasets = list(client.list_datasets())
-            response['projects'].append({
-                'id': project.project_id,
-                'name': project.friendly_name,
-                'datasets': list(map(
-                    lambda dataset: {
-                        'id': dataset.dataset_id,
-                        'name': dataset.dataset_id
-                    },
-                    datasets
-                ))
-            })
+        try:
+            projects = list(client.list_projects())
+            for project in projects:
+                client = bigquery.client.Client(
+                    credentials=self.get_credentials(),
+                    project=project.project_id
+                )
+                datasets = list(client.list_datasets())
+                response['projects'].append({
+                    'id': project.project_id,
+                    'name': project.friendly_name,
+                    'datasets': list(map(
+                        lambda dataset: {
+                            'id': dataset.dataset_id,
+                            'name': dataset.dataset_id
+                        },
+                        datasets
+                    ))
+                })
+
+        except RefreshError:
+            message = 'Cannot connect to BigQuery.' \
+                      ' Please try reauthorizing.'
+            raise UserException(message)
+        except google.api_core.exceptions.Forbidden as err:
+            raise UserException(err.message)
 
         print(json.dumps(response))
