@@ -54,9 +54,8 @@ class App:
             client_email = parameters.get('service_account').get('client_email')
             token_uri = parameters.get('service_account').get('token_uri')
 
-            # replace all escaped newline characters
             service_account_info = {
-                'private_key': private_key.replace('\\n', '\n'),
+                'private_key': private_key,
                 'client_email': client_email,
                 'token_uri': token_uri
             }
