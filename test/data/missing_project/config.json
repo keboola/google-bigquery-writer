@@ -1,8 +1,5 @@
 {
     "parameters": {
-        "service_account": {
-            "dummy": "dummy"
-        },
         "dataset": "sample-schema",
         "items": [
             {
@@ -11,5 +8,12 @@
                 "tableId": "in.c-bucket.table1"
             }
         ]
+    },
+    "authorization": {
+        "oauth_api": {
+            "credentials": {
+                "#data": "{\"dummy\": true}"
+            }
+        }
     }
 }

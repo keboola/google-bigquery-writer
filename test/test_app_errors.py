@@ -101,4 +101,12 @@ class TestAppErrors:
                                ' Please try reauthorizing.'
             pass
 
-    # TODO invalid service account
+    def test_service_account_missing_private_key(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + "service_account_missing_private_key/"
+        application = app.App()
+        try:
+            application.run()
+            pytest.fail("Must raise exception.")
+        except exceptions.UserException as err:
+            assert str(err) == 'Service account private key missing.'
+            pass

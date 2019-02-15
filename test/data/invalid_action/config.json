@@ -1,6 +1,9 @@
 {
     "parameters": {
         "service_account": {
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy",
             "project_id": "dummy"
         },
         "dataset": "sample-dataset",

@@ -18,12 +18,11 @@ class App:
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
 
-    def get_credentials(self):
+    def validate_credentials(self):
         parameters = self.cfg.get_parameters()
         if (
                 parameters.get('service_account')
         ):
-            # service account
             private_key = parameters.get('service_account').get('#private_key')
             if private_key == '' or private_key is None:
                 raise UserException('Service account private key missing.')
@@ -35,6 +34,25 @@ class App:
             token_uri = parameters.get('service_account').get('token_uri')
             if token_uri == '' or token_uri is None:
                 raise UserException('Service account token URI missing.')
+
+            project_id = parameters.get('service_account').get('project_id')
+            if project_id == '' or project_id is None:
+                raise UserException('Service account project id missing.')
+
+        if (
+                self.cfg.get_oauthapi_data() == {} and
+                not parameters.get('service_account')
+        ):
+            raise UserException('Authorization missing.')
+
+    def get_credentials(self):
+        parameters = self.cfg.get_parameters()
+        if (
+                parameters.get('service_account')
+        ):
+            private_key = parameters.get('service_account').get('#private_key')
+            client_email = parameters.get('service_account').get('client_email')
+            token_uri = parameters.get('service_account').get('token_uri')
 
             # replace all escaped newline characters
             service_account_info = {
@@ -94,11 +112,7 @@ class App:
             message = 'Configuration is empty.'
             raise UserException(message)
 
-        if (
-                self.cfg.get_oauthapi_data() == {} and
-                not parameters.get('service_account')
-        ):
-            raise UserException('Authorization missing.')
+        self.validate_credentials()
 
         if parameters.get('dataset') is None or parameters.get('dataset') == '':
             message = 'Google BigQuery dataset not specified in the configuration.'

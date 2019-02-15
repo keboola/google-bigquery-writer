@@ -1,7 +1,10 @@
 {
     "parameters": {
         "service_account": {
-            "dummy": "dummy"
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy",
+            "project_id": "dummy"
         },
         "items": [
             {
