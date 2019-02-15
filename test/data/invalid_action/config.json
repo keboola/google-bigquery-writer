@@ -1,6 +1,8 @@
 {
     "parameters": {
-        "project": "sample-project",
+        "service_account": {
+            "project_id": "dummy"
+        },
         "dataset": "sample-dataset",
         "tables": [
             {

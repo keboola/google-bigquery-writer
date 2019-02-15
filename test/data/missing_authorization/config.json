@@ -1,6 +1,5 @@
 {
   "parameters": {
-    "project": "dummy",
     "dataset": "dummy",
     "tables": [
       {

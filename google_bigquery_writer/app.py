@@ -54,8 +54,6 @@ class App:
         else:
             # fallback to oauth
             oauthapi_data = self.cfg.get_oauthapi_data()
-            if oauthapi_data == {}:
-                raise UserException('Authorization missing.')
             return google.oauth2.credentials.Credentials(
                 oauthapi_data.get('access_token'),
                 token_uri='https://accounts.google.com/o/oauth2/token',
@@ -71,8 +69,16 @@ class App:
         if self.writer:
             return self.writer
 
+        if (
+                self.cfg.get_parameters().get('service_account') and
+                self.cfg.get_parameters().get('service_account').get('project_id')
+        ):
+            project = self.cfg.get_parameters().get('service_account').get('project_id')
+        elif self.cfg.get_parameters().get('project'):
+            project = self.cfg.get_parameters().get('project')
+
         bigquery_client_factory = BigqueryClientFactory(
-            self.cfg.get_parameters().get('project'),
+            project,
             self.get_credentials()
         )
 
@@ -87,10 +93,24 @@ class App:
         if len(parameters) == 0:
             message = 'Configuration is empty.'
             raise UserException(message)
+
+        if (
+                self.cfg.get_oauthapi_data() == {} and
+                not parameters.get('service_account')
+        ):
+            raise UserException('Authorization missing.')
+
         if parameters.get('dataset') is None or parameters.get('dataset') == '':
             message = 'Google BigQuery dataset not specified in the configuration.'
             raise UserException(message)
-        if parameters.get('project') is None or parameters.get('project') == '':
+
+        if (
+                not self.cfg.get_parameters().get('project') and
+                (
+                        not self.cfg.get_parameters().get('service_account') or
+                        not self.cfg.get_parameters().get('service_account').get('project_id')
+                )
+        ):
             message = 'Google BigQuery project not specified in the configuration.'
             raise UserException(message)
 

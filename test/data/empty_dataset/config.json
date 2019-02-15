@@ -1,6 +1,8 @@
 {
     "parameters": {
-        "project": "sample-project",
+        "service_account": {
+            "dummy": "dummy"
+        },
         "dataset": "",
         "items": [
             {

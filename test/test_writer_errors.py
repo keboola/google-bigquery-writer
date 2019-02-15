@@ -25,7 +25,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             client_secret=os.environ.get('OAUTH_CLIENT_SECRET')
         )
         bigquery_client = bigquery.Client(
-            os.environ.get('BIGQUERY_PROJECT'),
+            self.get_project(),
             invalid_credentials
         )
         my_writer = writer.Writer(bigquery_client)

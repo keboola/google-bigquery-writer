@@ -35,6 +35,7 @@ class TestApp(GoogleBigQueryWriterTest):
                 '#private_key': service_account_info['private_key'],
                 'client_email': service_account_info['client_email'],
                 'token_uri': service_account_info['token_uri'],
+                'project_id': service_account_info['project_id']
             }
         elif credentials_type == 'oauth':
             oauth = {
@@ -52,11 +53,11 @@ class TestApp(GoogleBigQueryWriterTest):
                     }
                 }
             }
+            data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
 
         else:
             raise Exception('Unknown credentials type ' + credentials_type)
 
-        data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
         data['parameters']['dataset'] = os.environ.get('BIGQUERY_DATASET')
         data['action'] = action
 
@@ -84,18 +85,15 @@ class TestApp(GoogleBigQueryWriterTest):
             dst_dir + '/in.c-bucket.table2.csv.manifest'
         )
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_run_with_no_items_throws_user_exception(self, data_dir, credentials_type):
-        os.environ['KBC_DATADIR'] = data_dir + 'config_without_items/'
-        self.prepare(action='run', data_dir=data_dir)
+    def test_run_authorization_missing_user_exception(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + 'missing_authorization/'
         application = app.App()
         try:
             application.run()
             pytest.fail('Must raise exception')
         except UserException as err:
             assert str(err) ==\
-                   'Key \'items\' not defined in ' \
-                   '\'in.c-bucket.table1\' table definition.'
+                   'Authorization missing.'
 
     @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
     def test_successful_run(self, data_dir, capsys, credentials_type):
@@ -235,7 +233,7 @@ class TestApp(GoogleBigQueryWriterTest):
     def test_list(self, data_dir, capsys, credentials_type):
         client = self.get_client('service_account_manage')
         dataset_reference = bigquery.DatasetReference(
-            os.environ.get('BIGQUERY_PROJECT'),
+            self.get_project(),
             os.environ.get('BIGQUERY_DATASET')
         )
         dataset = bigquery.Dataset(dataset_reference)
@@ -249,12 +247,12 @@ class TestApp(GoogleBigQueryWriterTest):
         assert err == ''
         data = json.loads(out)
         assert 'projects' in data.keys()
-        assert os.environ.get('BIGQUERY_PROJECT') in map(
+        assert self.get_project() in map(
             lambda project: project['id'],
             data['projects']
         )
         project = list(filter(
-            lambda project: project['id'] == os.environ.get('BIGQUERY_PROJECT'),
+            lambda project: project['id'] == self.get_project(),
             data['projects']
         ))[0]
         assert os.environ.get('BIGQUERY_DATASET') in map(

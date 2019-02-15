@@ -14,6 +14,9 @@ class GoogleBigQueryWriterTest(object):
     def setup_method(self):
         self.bigquery_client = None
 
+    def get_project(self):
+        return json.loads(os.environ.get('SERVICE_ACCOUNT_MANAGE'))['project_id']
+
     def get_client(self, credentials_type='service_account'):
         if self.bigquery_client is None:
             if credentials_type == 'oauth':
@@ -26,7 +29,7 @@ class GoogleBigQueryWriterTest(object):
                 raise Exception('Unknown credentials type ' + credentials_type)
 
             self.bigquery_client_factory = BigqueryClientFactory(
-                os.environ.get('BIGQUERY_PROJECT'),
+                self.get_project(),
                 credentials
             )
             self.bigquery_client = self.bigquery_client_factory.create()

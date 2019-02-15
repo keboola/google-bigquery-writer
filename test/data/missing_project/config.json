@@ -1,5 +1,8 @@
 {
     "parameters": {
+        "service_account": {
+            "dummy": "dummy"
+        },
         "dataset": "sample-schema",
         "items": [
             {
