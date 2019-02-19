@@ -20,9 +20,7 @@ class App:
 
     def validate_credentials(self):
         parameters = self.cfg.get_parameters()
-        if (
-                parameters.get('service_account')
-        ):
+        if parameters.get('service_account'):
             private_key = parameters.get('service_account').get('#private_key')
             if private_key == '' or private_key is None:
                 raise UserException('Service account private key missing.')
@@ -47,9 +45,7 @@ class App:
 
     def get_credentials(self):
         parameters = self.cfg.get_parameters()
-        if (
-                parameters.get('service_account')
-        ):
+        if parameters.get('service_account'):
             private_key = parameters.get('service_account').get('#private_key')
             client_email = parameters.get('service_account').get('client_email')
             token_uri = parameters.get('service_account').get('token_uri')
