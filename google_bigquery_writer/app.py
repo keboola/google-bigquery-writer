@@ -9,6 +9,7 @@ import os
 from google_bigquery_writer import schema_mapper
 from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
+from google.oauth2 import service_account
 
 
 class App:
@@ -17,17 +18,62 @@ class App:
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
 
-    def get_credentials(self):
-        oauthapi_data = self.cfg.get_oauthapi_data()
-        if oauthapi_data == {}:
+    def validate_credentials(self):
+        parameters = self.cfg.get_parameters()
+        if parameters.get('service_account'):
+            private_key = parameters.get('service_account').get('#private_key')
+            if private_key == '' or private_key is None:
+                raise UserException('Service account private key missing.')
+
+            client_email = parameters.get('service_account').get('client_email')
+            if client_email == '' or client_email is None:
+                raise UserException('Service account client email missing.')
+
+            token_uri = parameters.get('service_account').get('token_uri')
+            if token_uri == '' or token_uri is None:
+                raise UserException('Service account token URI missing.')
+
+            project_id = parameters.get('service_account').get('project_id')
+            if project_id == '' or project_id is None:
+                raise UserException('Service account project id missing.')
+
+        if (
+                self.cfg.get_oauthapi_data() == {} and
+                not parameters.get('service_account')
+        ):
             raise UserException('Authorization missing.')
-        return google.oauth2.credentials.Credentials(
-            oauthapi_data.get('access_token'),
-            token_uri='https://accounts.google.com/o/oauth2/token',
-            client_id=self.cfg.get_oauthapi_appkey(),
-            client_secret=self.cfg.get_oauthapi_appsecret(),
-            refresh_token=oauthapi_data.get('refresh_token')
-        )
+
+    def get_credentials(self):
+        parameters = self.cfg.get_parameters()
+        if parameters.get('service_account'):
+            private_key = parameters.get('service_account').get('#private_key')
+            client_email = parameters.get('service_account').get('client_email')
+            token_uri = parameters.get('service_account').get('token_uri')
+
+            service_account_info = {
+                'private_key': private_key,
+                'client_email': client_email,
+                'token_uri': token_uri
+            }
+
+            scopes = [
+                'https://www.googleapis.com/auth/bigquery'
+            ]
+            return service_account.Credentials.from_service_account_info(
+                service_account_info,
+                scopes=scopes
+            )
+
+        else:
+            # fallback to oauth
+            oauthapi_data = self.cfg.get_oauthapi_data()
+            return google.oauth2.credentials.Credentials(
+                oauthapi_data.get('access_token'),
+                token_uri='https://accounts.google.com/o/oauth2/token',
+                client_id=self.cfg.get_oauthapi_appkey(),
+                client_secret=self.cfg.get_oauthapi_appsecret(),
+                refresh_token=oauthapi_data.get('refresh_token')
+            )
 
     def get_writer(self):
         """
@@ -36,8 +82,16 @@ class App:
         if self.writer:
             return self.writer
 
+        if (
+                self.cfg.get_parameters().get('service_account') and
+                self.cfg.get_parameters().get('service_account').get('project_id')
+        ):
+            project = self.cfg.get_parameters().get('service_account').get('project_id')
+        elif self.cfg.get_parameters().get('project'):
+            project = self.cfg.get_parameters().get('project')
+
         bigquery_client_factory = BigqueryClientFactory(
-            self.cfg.get_parameters().get('project'),
+            project,
             self.get_credentials()
         )
 
@@ -52,10 +106,20 @@ class App:
         if len(parameters) == 0:
             message = 'Configuration is empty.'
             raise UserException(message)
+
+        self.validate_credentials()
+
         if parameters.get('dataset') is None or parameters.get('dataset') == '':
             message = 'Google BigQuery dataset not specified in the configuration.'
             raise UserException(message)
-        if parameters.get('project') is None or parameters.get('project') == '':
+
+        if (
+                not self.cfg.get_parameters().get('project') and
+                (
+                        not self.cfg.get_parameters().get('service_account') or
+                        not self.cfg.get_parameters().get('service_account').get('project_id')
+                )
+        ):
             message = 'Google BigQuery project not specified in the configuration.'
             raise UserException(message)
 
@@ -118,6 +182,8 @@ class App:
                 message = 'Cannot connect to BigQuery.' \
                           ' Please try reauthorizing.'
                 raise UserException(message)
+            except google.api_core.exceptions.Forbidden as err:
+                raise UserException(err.message)
         print('BigQuery Writer finished')
 
     def action_list(self):
@@ -128,23 +194,31 @@ class App:
         response = {
             'projects': []
         }
-        projects = list(client.list_projects())
-        for project in projects:
-            client = bigquery.client.Client(
-                credentials=self.get_credentials(),
-                project=project.project_id
-            )
-            datasets = list(client.list_datasets())
-            response['projects'].append({
-                'id': project.project_id,
-                'name': project.friendly_name,
-                'datasets': list(map(
-                    lambda dataset: {
-                        'id': dataset.dataset_id,
-                        'name': dataset.dataset_id
-                    },
-                    datasets
-                ))
-            })
+        try:
+            projects = list(client.list_projects())
+            for project in projects:
+                client = bigquery.client.Client(
+                    credentials=self.get_credentials(),
+                    project=project.project_id
+                )
+                datasets = list(client.list_datasets())
+                response['projects'].append({
+                    'id': project.project_id,
+                    'name': project.friendly_name,
+                    'datasets': list(map(
+                        lambda dataset: {
+                            'id': dataset.dataset_id,
+                            'name': dataset.dataset_id
+                        },
+                        datasets
+                    ))
+                })
+
+        except RefreshError:
+            message = 'Cannot connect to BigQuery.' \
+                      ' Please try reauthorizing.'
+            raise UserException(message)
+        except google.api_core.exceptions.Forbidden as err:
+            raise UserException(err.message)
 
         print(json.dumps(response))

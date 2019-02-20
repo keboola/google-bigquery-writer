@@ -1,0 +1,10 @@
+{
+    "parameters": {
+        "service_account": {
+              "client_email": "keboola-connection-bigquery-wr@my_bigquery_project.iam.gserviceaccount.com",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "project_id": "my_bigquery_project"
+        },
+        "dataset": "dummy"
+    }
+}

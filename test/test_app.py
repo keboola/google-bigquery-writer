@@ -18,35 +18,46 @@ class TestApp(GoogleBigQueryWriterTest):
         super(TestApp, self).setup_method()
         self.delete_dataset()
 
-    def prepare(self, action="run", data_dir=None):
-        if os.path.exists(data_dir + "sample_populated"):
-            shutil.rmtree(data_dir + "sample_populated")
+    def prepare(self, action='run', data_dir=None, credentials_type='service_account'):
+        if os.path.exists(data_dir + 'sample_populated'):
+            shutil.rmtree(data_dir + 'sample_populated')
 
         # populate config file
-        source_config_file_path = data_dir + "sample/config.json"
-        dst_config_file_path = data_dir + "sample_populated/config.json"
-        os.makedirs(data_dir + "sample_populated/")
+        source_config_file_path = data_dir + 'sample/config.json'
+        dst_config_file_path = data_dir + 'sample_populated/config.json'
+        os.makedirs(data_dir + 'sample_populated/')
         with open(source_config_file_path) as source_config_file:
             data = json.load(source_config_file)
 
-        oauth = {
-            "access_token": os.environ.get('OAUTH_ACCESS_TOKEN'),
-            "expires_in": 3600,
-            "refresh_token": os.environ.get('OAUTH_REFRESH_TOKEN'),
-            "token_type": "Bearer"
-        }
-
-        data['authorization'] = {
-            'oauth_api': {
-                'credentials': {
-                    'appKey': os.environ.get('OAUTH_CLIENT_ID'),
-                    '#appSecret': os.environ.get('OAUTH_CLIENT_SECRET'),
-                    '#data': json.dumps(oauth)
+        if credentials_type == 'service_account':
+            service_account_info = json.loads(os.environ.get('SERVICE_ACCOUNT_USER'))
+            data['parameters']['service_account'] = {
+                '#private_key': service_account_info['private_key'],
+                'client_email': service_account_info['client_email'],
+                'token_uri': service_account_info['token_uri'],
+                'project_id': service_account_info['project_id']
+            }
+        elif credentials_type == 'oauth':
+            oauth = {
+                'access_token': os.environ.get('OAUTH_ACCESS_TOKEN'),
+                'expires_in': 3600,
+                'refresh_token': os.environ.get('OAUTH_REFRESH_TOKEN'),
+                'token_type': 'Bearer'
+            }
+            data['authorization'] = {
+                'oauth_api': {
+                    'credentials': {
+                        'appKey': os.environ.get('OAUTH_CLIENT_ID'),
+                        '#appSecret': os.environ.get('OAUTH_CLIENT_SECRET'),
+                        '#data': json.dumps(oauth)
+                    }
                 }
             }
-        }
+            data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
 
-        data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
+        else:
+            raise Exception('Unknown credentials type ' + credentials_type)
+
         data['parameters']['dataset'] = os.environ.get('BIGQUERY_DATASET')
         data['action'] = action
 
@@ -54,8 +65,8 @@ class TestApp(GoogleBigQueryWriterTest):
             json.dump(data, dst_config_file)
 
         # copy data tables
-        dst_dir = data_dir + "sample_populated/in/tables"
-        src_dir = data_dir + "sample/in/tables"
+        dst_dir = data_dir + 'sample_populated/in/tables'
+        src_dir = data_dir + 'sample/in/tables'
         os.makedirs(dst_dir)
         shutil.copyfile(
             src_dir + '/in.c-bucket.table1.csv',
@@ -74,22 +85,21 @@ class TestApp(GoogleBigQueryWriterTest):
             dst_dir + '/in.c-bucket.table2.csv.manifest'
         )
 
-    def test_run_with_no_items_throws_user_exception(self, data_dir):
-        os.environ['KBC_DATADIR'] = data_dir + 'config_without_items/'
-        self.prepare(action="run", data_dir=data_dir)
+    def test_run_authorization_missing_user_exception(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + 'missing_authorization/'
         application = app.App()
         try:
             application.run()
             pytest.fail('Must raise exception')
         except UserException as err:
             assert str(err) ==\
-                   'Key \'items\' not defined in ' \
-                   '\'in.c-bucket.table1\' table definition.'
+                   'Authorization missing.'
 
-    def test_successful_run(self, data_dir, capsys):
-        os.environ['KBC_DATADIR'] = "%ssample_populated/"\
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_successful_run(self, data_dir, capsys, credentials_type):
+        os.environ['KBC_DATADIR'] = '%ssample_populated/'\
                                     % data_dir
-        self.prepare(action="run", data_dir=data_dir)
+        self.prepare(action='run', data_dir=data_dir, credentials_type=credentials_type)
         # run app
         application = app.App()
         application.run()
@@ -105,7 +115,7 @@ class TestApp(GoogleBigQueryWriterTest):
                 os.environ.get('BIGQUERY_DATASET')
             )
 
-        client = self.get_client()
+        client = self.get_client('service_account_manage')
 
         # check for only the testing dataset
         datasets = list(client.list_datasets())
@@ -219,29 +229,30 @@ class TestApp(GoogleBigQueryWriterTest):
                 os.environ.get('BIGQUERY_DATASET')
             )
 
-    def test_list(self, data_dir, capsys):
-        client = self.get_client()
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_list(self, data_dir, capsys, credentials_type):
+        client = self.get_client('service_account_manage')
         dataset_reference = bigquery.DatasetReference(
-            os.environ.get('BIGQUERY_PROJECT'),
+            self.get_project(),
             os.environ.get('BIGQUERY_DATASET')
         )
         dataset = bigquery.Dataset(dataset_reference)
         client.create_dataset(dataset)
 
-        os.environ['KBC_DATADIR'] = data_dir + "sample_populated/"
-        self.prepare(action="list", data_dir=data_dir)
+        os.environ['KBC_DATADIR'] = data_dir + 'sample_populated/'
+        self.prepare(action='list', data_dir=data_dir, credentials_type=credentials_type)
         application = app.App()
         application.run()
         out, err = capsys.readouterr()
         assert err == ''
         data = json.loads(out)
         assert 'projects' in data.keys()
-        assert os.environ.get('BIGQUERY_PROJECT') in map(
+        assert self.get_project() in map(
             lambda project: project['id'],
             data['projects']
         )
         project = list(filter(
-            lambda project: project['id'] == os.environ.get('BIGQUERY_PROJECT'),
+            lambda project: project['id'] == self.get_project(),
             data['projects']
         ))[0]
         assert os.environ.get('BIGQUERY_DATASET') in map(

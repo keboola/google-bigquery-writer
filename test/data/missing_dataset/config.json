@@ -1,6 +1,11 @@
 {
     "parameters": {
-        "project": "sample-project",
+        "service_account": {
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy",
+            "project_id": "dummy"
+        },
         "items": [
             {
                 "dbName": "table1",
