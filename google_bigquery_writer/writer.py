@@ -1,6 +1,8 @@
 from google.cloud import bigquery, exceptions as bq_exceptions
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
+from google.api_core.exceptions import BadRequest
+
 import time
 
 
@@ -15,7 +17,10 @@ class Writer(object):
             return self.bigquery_client.get_dataset(dataset_reference)
         except bq_exceptions.NotFound:
             dataset_obj = bigquery.Dataset(dataset_reference)
-            return self.bigquery_client.create_dataset(dataset_obj)
+            try:
+                return self.bigquery_client.create_dataset(dataset_obj)
+            except BadRequest as err:
+                raise UserException(err.message)
         except bq_exceptions.BadRequest as err:
             message = 'Cannot create dataset %s: %s' % (
                 dataset_name,
