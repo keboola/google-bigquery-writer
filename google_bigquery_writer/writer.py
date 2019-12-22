@@ -141,7 +141,7 @@ class Writer(object):
         upload_max_retries = 5
         upload_retries = 0
         upload_finished = False
-        while upload_retries < upload_max_retries and upload_finished == False:
+        while upload_retries < upload_max_retries and upload_finished is False:
             upload_retries += 1
             try:
                 job = self.write_table(
