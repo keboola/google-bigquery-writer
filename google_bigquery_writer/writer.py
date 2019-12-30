@@ -151,11 +151,11 @@ class Writer(object):
                     incremental=incremental
                 )
             except bq_exceptions.BadRequest as err:
-                message = 'Retrying upload: %s' % (
-                    str(err)
-                )
-                print(message)
                 if upload_retries < upload_max_retries:
+                    message = 'Retrying upload: %s' % (
+                        str(err)
+                    )
+                    print(message)
                     continue
                 message = 'Cannot upload dataset %s: %s' % (
                     dataset_name,
