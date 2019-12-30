@@ -143,11 +143,6 @@ class Writer(object):
         upload_finished = False
         while upload_retries < upload_max_retries and upload_finished is False:
             upload_retries += 1
-            message = 'Attempt: %s' % (
-                str(upload_retries)
-            )
-            print(message)
-
             try:
                 job = self.write_table(
                     csv_file_path,
