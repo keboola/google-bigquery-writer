@@ -109,9 +109,7 @@ class TestApp(GoogleBigQueryWriterTest):
         assert err == ''
         assert out == 'Loading table in.c-bucket.table1 into BigQuery ' \
             'as %s.table1\n' \
-            'Attempt: 1\n' \
             'Loading table in.c-bucket.table2 into BigQuery as %s.table2\n' \
-            'Attempt: 1\n' \
             'BigQuery Writer finished\n' % (
                 os.environ.get('BIGQUERY_DATASET'),
                 os.environ.get('BIGQUERY_DATASET')
@@ -225,9 +223,7 @@ class TestApp(GoogleBigQueryWriterTest):
         assert err == ''
         assert out == 'Loading table in.c-bucket.table1 into BigQuery ' \
             'as %s.table1\n' \
-            'Attempt: 1\n' \
             'Loading table in.c-bucket.table2 into BigQuery as %s.table2\n' \
-            'Attempt: 1\n' \
             'BigQuery Writer finished\n' % (
                 os.environ.get('BIGQUERY_DATASET'),
                 os.environ.get('BIGQUERY_DATASET')
