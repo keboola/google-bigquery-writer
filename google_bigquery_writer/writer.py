@@ -138,30 +138,51 @@ class Writer(object):
             polling_max_retries: int = 360,
             polling_delay: int = 5
     ) -> None:
-        job = self.write_table(
-            csv_file_path,
-            dataset_name,
-            table_definition,
-            incremental=incremental
-        )
-        retry_count = 0
-        while retry_count < polling_max_retries and job.state != u'DONE':
-            time.sleep(polling_delay)
-            retry_count += 1
-            job.reload()
-        if job.state != u'DONE':
-            message = 'Loading data into table %s.%s didn\'t finish in %s ' \
-                'seconds' % (
+        upload_max_retries = 5
+        upload_retries = 0
+        upload_finished = False
+        while upload_retries < upload_max_retries and upload_finished is False:
+            upload_retries += 1
+            try:
+                job = self.write_table(
+                    csv_file_path,
+                    dataset_name,
+                    table_definition,
+                    incremental=incremental
+                )
+            except bq_exceptions.BadRequest as err:
+                if upload_retries < upload_max_retries:
+                    message = 'Retrying upload: %s' % (
+                        str(err)
+                    )
+                    print(message)
+                    continue
+                message = 'Cannot upload dataset %s: %s' % (
+                    dataset_name,
+                    str(err)
+                )
+                raise UserException(message)
+
+            polling_retries = 0
+            while polling_retries < polling_max_retries and job.state != u'DONE':
+                time.sleep(polling_delay)
+                polling_retries += 1
+                job.reload()
+
+            upload_finished = True
+            if job.state != u'DONE':
+                message = 'Loading data into table %s.%s didn\'t finish in %s ' \
+                    'seconds' % (
+                        dataset_name,
+                        table_definition['dbName'],
+                        polling_delay*polling_max_retries
+                    )
+                raise UserException(message)
+            if job.errors:
+                first_error = job.errors.pop()
+                message = 'Loading data into table %s.%s failed: %s' % (
                     dataset_name,
                     table_definition['dbName'],
-                    polling_delay*polling_max_retries
+                    first_error['message']
                 )
-            raise UserException(message)
-        if job.errors:
-            first_error = job.errors.pop()
-            message = 'Loading data into table %s.%s failed: %s' % (
-                dataset_name,
-                table_definition['dbName'],
-                first_error['message']
-            )
-            raise UserException(message)
+                raise UserException(message)
