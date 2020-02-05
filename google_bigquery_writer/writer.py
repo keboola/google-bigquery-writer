@@ -121,12 +121,14 @@ class Writer(object):
             job_config.skip_leading_rows = 1
             job_config.allow_quoted_newlines = True
 
-            job = self.bigquery_client.load_table_from_file(
-                readable,
-                table_reference,
-                job_config=job_config
-            )
-
+            try:
+                job = self.bigquery_client.load_table_from_file(
+                    readable,
+                    table_reference,
+                    job_config=job_config
+                )
+            except bq_exceptions.ConnectionError as err:
+                raise UserException(str(err))
             return job
 
     def write_table_sync(
