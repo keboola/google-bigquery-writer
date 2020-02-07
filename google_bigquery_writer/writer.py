@@ -127,7 +127,7 @@ class Writer(object):
                     table_reference,
                     job_config=job_config
                 )
-            except bq_exceptions.ConnectionError as err:
+            except bq_exceptions.BadRequest as err:
                 raise UserException(str(err))
             return job
 
