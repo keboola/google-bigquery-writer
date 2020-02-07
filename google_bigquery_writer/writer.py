@@ -128,7 +128,11 @@ class Writer(object):
                     job_config=job_config
                 )
             except bq_exceptions.BadRequest as err:
-                raise UserException(str(err))
+                message = 'Cannot load table from file %s: %s' % (
+                    table_reference,
+                    str(err)
+                )
+                raise UserException(message)
             return job
 
     def write_table_sync(
