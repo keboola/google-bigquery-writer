@@ -128,7 +128,8 @@ class Writer(object):
                     job_config=job_config
                 )
             except bq_exceptions.BadRequest as err:
-                message = 'Cannot load table from file %s: %s' % (
+                message = 'Loading data into table %s.%s failed: %s' % (
+                    dataset_name,
                     table_definition['dbName'],
                     str(err)
                 )
