@@ -129,7 +129,7 @@ class Writer(object):
                 )
             except bq_exceptions.BadRequest as err:
                 message = 'Cannot load table from file %s: %s' % (
-                    table_reference,
+                    table_definition['dbName'],
                     str(err)
                 )
                 raise UserException(message)
