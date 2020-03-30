@@ -1,3 +1,4 @@
+from requests import exceptions as req_exceptions
 from google.cloud import bigquery, exceptions as bq_exceptions
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
@@ -121,12 +122,19 @@ class Writer(object):
             job_config.skip_leading_rows = 1
             job_config.allow_quoted_newlines = True
 
-            job = self.bigquery_client.load_table_from_file(
-                readable,
-                table_reference,
-                job_config=job_config
-            )
-
+            try:
+                job = self.bigquery_client.load_table_from_file(
+                    readable,
+                    table_reference,
+                    job_config=job_config
+                )
+            except req_exceptions.ConnectionError as err:
+                message = 'Loading data into table %s.%s failed: %s' % (
+                    dataset_name,
+                    table_definition['dbName'],
+                    str(err)
+                )
+                raise UserException(message)
             return job
 
     def write_table_sync(
