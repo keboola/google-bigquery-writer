@@ -5,3 +5,4 @@ __pycache__
 /.env
 /test/data/sample_populated
 /.pytest_cache
+/venv

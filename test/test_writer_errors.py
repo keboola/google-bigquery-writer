@@ -1,9 +1,11 @@
+import os
 import pytest
+import requests
+from unittest.mock import MagicMock
 from google_bigquery_writer import writer, exceptions
 from google.oauth2.credentials import Credentials
 from google.cloud import bigquery
 from google.auth.exceptions import RefreshError
-import os
 from test.bigquery_writer_test import GoogleBigQueryWriterTest
 from test import fixtures
 
@@ -183,3 +185,20 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
             assert 'Project invalid-project was not found.' in str(err)
+
+    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
+    def test_write_table_connection_error(self, data_dir, credentials_type):
+        client = self.get_client(credentials_type=credentials_type)
+        error_msg = "Some connection error!"
+        client.load_table_from_file = MagicMock(side_effect=requests.exceptions.ConnectionError(error_msg))
+        my_writer = writer.Writer(client)
+        try:
+            my_writer.write_table(
+                data_dir + 'simple_csv/in/tables/table.csv',
+                os.environ.get('BIGQUERY_DATASET'),
+                fixtures.get_table_configuration()
+            )
+        except exceptions.UserException as err:
+            msg = 'Loading data into table {}.{} failed: {}'\
+                .format(os.environ.get('BIGQUERY_DATASET'), os.environ.get('BIGQUERY_TABLE'), error_msg)
+            assert msg in str(err)

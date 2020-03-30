@@ -1,3 +1,4 @@
+from requests import exceptions as req_exceptions
 from google.cloud import bigquery, exceptions as bq_exceptions
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
@@ -127,7 +128,7 @@ class Writer(object):
                     table_reference,
                     job_config=job_config
                 )
-            except bq_exceptions.BadRequest as err:
+            except req_exceptions.ConnectionError as err:
                 message = 'Loading data into table %s.%s failed: %s' % (
                     dataset_name,
                     table_definition['dbName'],
