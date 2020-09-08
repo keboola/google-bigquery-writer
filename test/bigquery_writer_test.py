@@ -1,4 +1,5 @@
 from google.cloud import exceptions
+from google.cloud.bigquery.dataset import DatasetReference
 import google.oauth2.credentials
 import os
 from google_bigquery_writer.bigquery_client_factory \
@@ -66,7 +67,7 @@ class GoogleBigQueryWriterTest(object):
 
     def delete_dataset(self):
         client = self.get_client('service_account_manage')
-        dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        dataset_reference = DatasetReference(self.get_project(), os.environ.get('BIGQUERY_DATASET'))
 
         try:
             dataset = client.get_dataset(dataset_reference)

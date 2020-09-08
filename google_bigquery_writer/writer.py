@@ -3,6 +3,7 @@ from google.cloud import bigquery, exceptions as bq_exceptions
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
 from google.api_core.exceptions import BadRequest
+from google.cloud.bigquery.dataset import DatasetReference
 
 import time
 
@@ -12,7 +13,7 @@ class Writer(object):
         self.bigquery_client = bigquery_client
 
     def obtain_dataset(self, dataset_name: str) -> bigquery.Dataset:
-        dataset_reference = self.bigquery_client.dataset(dataset_name)
+        dataset_reference = DatasetReference(self.bigquery_client.project, dataset_name)
 
         try:
             return self.bigquery_client.get_dataset(dataset_reference)
