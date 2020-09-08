@@ -100,7 +100,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Could not parse \'val1\' as int for field col2' in str(err)
+            assert 'Could not parse \'val1\' as INT64 for field col2' in str(err)
 
     @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
     def test_create_dataset_invalid_name(self, data_dir, credentials_type):
