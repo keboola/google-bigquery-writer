@@ -101,6 +101,16 @@ class TestAppErrors:
                                ' Please try reauthorizing.'
             pass
 
+    def test_invalid_authorization_private_key(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + "invalid_authorization_private_key/"
+        application = app.App()
+        try:
+            application.run()
+            pytest.fail("Must raise exception.")
+        except exceptions.UserException as err:
+            assert str(err) == 'Cannot get credentials from service account bigquery-writer-manage@syrup-components.iam.gserviceaccount.com. Reason "No key could be detected.".'
+            pass
+
     def test_service_account_missing_private_key(self, data_dir):
         os.environ['KBC_DATADIR'] = data_dir + "service_account_missing_private_key/"
         application = app.App()

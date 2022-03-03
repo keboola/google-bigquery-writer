@@ -1,0 +1,79 @@
+{
+  "parameters": {
+    "service_account": {
+      "type": "service_account",
+      "project_id": "syrup-components",
+      "private_key_id": "1234567890",
+      "#private_key": "-----BEGIN PRIVATE KEY-----\\n invalidKey\\n-----END PRIVATE KEY-----\n",
+      "client_email": "bigquery-writer-manage@syrup-components.iam.gserviceaccount.com",
+      "client_id": "100724185088086173503",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/oj-bigquery-writer-manage%40syrup-components.iam.gserviceaccount.com"
+    },
+    "project": "dummy",
+    "dataset": "dummy",
+    "tables": [
+      {
+        "dbName": "table1",
+        "export": true,
+        "tableId": "in.c-bucket.table1",
+        "items": [
+          {
+            "name": "string",
+            "dbName": "string",
+            "type": "STRING"
+          },
+          {
+            "name": "integer",
+            "dbName": "integer",
+            "type": "INTEGER"
+          },
+          {
+            "name": "float",
+            "dbName": "float",
+            "type": "FLOAT"
+          },
+          {
+            "name": "boolean",
+            "dbName": "boolean",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "timestamp",
+            "dbName": "timestamp",
+            "type": "TIMESTAMP"
+          }
+        ]
+      }
+    ]
+  },
+  "storage": {
+    "input": {
+      "tables": [
+        {
+          "source": "in.c-bucket.table1",
+          "destination": "in.c-bucket.table1.csv",
+          "columns": [
+            "string",
+            "integer",
+            "float",
+            "boolean",
+            "timestamp"
+          ]
+        }
+      ]
+    }
+  },
+  "authorization": {
+    "oauth_api": {
+      "credentials": {
+        "appKey": "invalid",
+        "#appSecret": "invalid",
+        "#data": "{\"access_token\": \"invalid\", \"expires_in\": 3600, \"refresh_token\": \"invalid\", \"token_type\": \"Bearer\"}"
+      }
+    }
+  },
+  "action": "run"
+}
