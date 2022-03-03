@@ -96,17 +96,17 @@ jobs:
       -
         name: Run tests
         run: |
-          docker run
-          -e OAUTH_ACCESS_TOKEN
-          -e OAUTH_CLIENT_ID
-          -e OAUTH_CLIENT_SECRET
-          -e OAUTH_REFRESH_TOKEN
-          -e SERVICE_ACCOUNT_USER
-          -e SERVICE_ACCOUNT_MANAGE
-          -e BIGQUERY_PROJECT
-          -e BIGQUERY_DATASET
-          -e BIGQUERY_TABLE
-          ${{env.APP_IMAGE}}
+          docker run \
+          -e OAUTH_ACCESS_TOKEN \
+          -e OAUTH_CLIENT_ID \
+          -e OAUTH_CLIENT_SECRET \
+          -e OAUTH_REFRESH_TOKEN \
+          -e SERVICE_ACCOUNT_USER \
+          -e SERVICE_ACCOUNT_MANAGE \
+          -e BIGQUERY_PROJECT \
+          -e BIGQUERY_DATASET \
+          -e BIGQUERY_TABLE \
+          ${{env.APP_IMAGE}} \
           sh -c '/home/tests.sh'
 
   tests-in-kbc:
