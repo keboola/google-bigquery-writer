@@ -108,7 +108,10 @@ class TestAppErrors:
             application.run()
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
-            assert str(err) == 'Cannot get credentials from service account bigquery-writer-manage@syrup-components.iam.gserviceaccount.com. Reason "No key could be detected.".'
+            assert str(err) == 'Cannot get credentials from service account ' \
+                               'bigquery-writer-manage@syrup-components.iam.' \
+                               'gserviceaccount.com. Reason ' \
+                               '"No key could be detected.".'
             pass
 
     def test_service_account_missing_private_key(self, data_dir):
