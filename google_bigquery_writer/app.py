@@ -59,10 +59,17 @@ class App:
             scopes = [
                 'https://www.googleapis.com/auth/bigquery'
             ]
-            return service_account.Credentials.from_service_account_info(
-                service_account_info,
-                scopes=scopes
-            )
+            try:
+                return service_account.Credentials.from_service_account_info(
+                    service_account_info,
+                    scopes=scopes
+                )
+            except ValueError as err:
+                message = 'Cannot get credentials from service account %s. Reason "%s".' % (
+                    client_email,
+                    str(err)
+                )
+                raise UserException(message)
 
         else:
             # fallback to oauth
