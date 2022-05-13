@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir --ignore-installed \
         coverage==4.5.1 \
         flake8
 
-RUN pip install --upgrade --no-cache-dir --ignore-installed https://github.com/keboola/python-docker-application.git@1.3.0
+RUN pip install --upgrade --no-cache-dir --ignore-installed https://github.com/keboola/python-docker-application/archive/refs/tags/1.3.0.zip
 
 RUN pip freeze
 
