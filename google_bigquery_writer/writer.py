@@ -159,7 +159,7 @@ class Writer(object):
                     table_definition,
                     incremental=incremental
                 )
-            except bq_exceptions.BadRequest, bq_exceptions.Unauthorized, bq_exceptions.InternalServerError as err:
+            except (bq_exceptions.BadRequest, bq_exceptions.Unauthorized, bq_exceptions.InternalServerError) as err:
                 if upload_retries < upload_max_retries:
                     message = 'Retrying upload: %s' % (
                         str(err)
