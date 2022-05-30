@@ -154,3 +154,7 @@ This app requires 2 sets of service account credentials - one for managing the t
   }
 }
 ```
+
+## License
+
+MIT licensed, see [LICENSE](./LICENSE) file.
