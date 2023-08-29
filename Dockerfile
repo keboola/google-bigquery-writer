@@ -4,7 +4,7 @@ FROM python:3.6
 RUN pip install --no-cache-dir --ignore-installed \
 		pytest \
         pytest-cov \
-        google-cloud-bigquery \
+        google-cloud-bigquery==v3.11.4 \
         oauth2client \
         coverage==4.5.1 \
         flake8
