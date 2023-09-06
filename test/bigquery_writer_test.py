@@ -51,6 +51,7 @@ class GoogleBigQueryWriterTest(object):
         scopes = [
             'https://www.googleapis.com/auth/bigquery'
         ]
+        print(service_account_info)
         return service_account.Credentials.from_service_account_info(
             service_account_info,
             scopes=scopes
