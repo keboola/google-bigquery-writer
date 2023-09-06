@@ -1,10 +1,10 @@
-FROM python:3.6
+FROM python:3.10
 
 # Install packages
 RUN pip install --no-cache-dir --ignore-installed \
 		pytest \
         pytest-cov \
-        google-cloud-bigquery==1.25.0 \
+        google-cloud-bigquery==3.11.4 \
         oauth2client \
         coverage==4.5.1 \
         flake8
