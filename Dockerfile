@@ -5,7 +5,7 @@ RUN pip install --no-cache-dir --ignore-installed \
 		pytest \
         pytest-cov \
         google-cloud-bigquery==1.25.0 \
-        oauth2client \
+        oauth2client==4.1.3 \
         coverage==4.5.1 \
         flake8
 
