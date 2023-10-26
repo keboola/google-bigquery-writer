@@ -190,6 +190,7 @@ class Writer(object):
             if job.errors:
                 first_error = job.errors.pop(0)
                 print(job.errors)
+                print(first_error)
                 message = 'Loading data into table %s.%s failed: %s' % (
                     dataset_name,
                     table_definition['dbName'],
