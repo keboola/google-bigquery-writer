@@ -189,6 +189,7 @@ class Writer(object):
                 raise UserException(message)
             if job.errors:
                 first_error = job.errors.pop(0)
+                print(job.errors)
                 message = 'Loading data into table %s.%s failed: %s' % (
                     dataset_name,
                     table_definition['dbName'],
