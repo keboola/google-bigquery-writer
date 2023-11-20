@@ -113,7 +113,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Cannot create dataset' in str(err)
+            assert 'Invalid dataset ID "writer_gh_actions INVALID"' in str(err)
 
     @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
     def test_create_table_invalid_name(self, data_dir, credentials_type):
