@@ -62,7 +62,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Too many values in row' in str(err)
+            assert 'Too many values in line' in str(err)
 
     @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
     def test_write_table_sync_error_missing_values(self, data_dir, credentials_type):
@@ -100,7 +100,7 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
             )
             pytest.fail('Must raise exception.')
         except exceptions.UserException as err:
-            assert 'Could not parse \'val1\' as INT64 for field col2' in str(err)
+            assert 'column_index: 1 column_name: "col2" column_type: INT64 value: "val2"' in str(err)
 
     @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
     def test_create_dataset_invalid_name(self, data_dir, credentials_type):
