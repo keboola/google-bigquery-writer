@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/keboola/google-bigquery-writer.svg?branch=master)](https://travis-ci.org/keboola/google-bigquery-writer) 
 [![Code Climate](https://codeclimate.com/github/keboola/google-bigquery-writer/badges/gpa.svg)](https://codeclimate.com/github/keboola/google-bigquery-writer)
 [![Test Coverage](https://codeclimate.com/github/keboola/google-bigquery-writer/badges/coverage.svg)](https://codeclimate.com/github/keboola/google-bigquery-writer/coverage)
 
