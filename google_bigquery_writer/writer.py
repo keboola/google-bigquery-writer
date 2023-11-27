@@ -9,6 +9,8 @@ import time
 
 
 class Writer(object):
+    REQUEST_TIMEOUT = 120  # Timeout in seconds
+
     def __init__(self, bigquery_client: bigquery.Client):
         self.bigquery_client = bigquery_client
 
@@ -16,11 +18,11 @@ class Writer(object):
         dataset_reference = DatasetReference(self.bigquery_client.project, dataset_name)
 
         try:
-            return self.bigquery_client.get_dataset(dataset_reference)
+            return self.bigquery_client.get_dataset(dataset_reference, timeout=self.REQUEST_TIMEOUT)
         except bq_exceptions.NotFound:
             dataset_obj = bigquery.Dataset(dataset_reference)
             try:
-                return self.bigquery_client.create_dataset(dataset_obj)
+                return self.bigquery_client.create_dataset(dataset_obj, timeout=self.REQUEST_TIMEOUT)
             except BadRequest as err:
                 raise UserException(err.message)
         except bq_exceptions.BadRequest as err:
@@ -31,7 +33,7 @@ class Writer(object):
             raise UserException(message)
 
     def verify_project(self) -> None:
-        projects = self.bigquery_client.list_projects()
+        projects = self.bigquery_client.list_projects(timeout=self.REQUEST_TIMEOUT)
         project_list = list(map(
             lambda project: project.project_id,
             projects
@@ -54,7 +56,7 @@ class Writer(object):
         table = bigquery.Table(table_reference, columns_schema)
 
         try:
-            bq_table = self.bigquery_client.get_table(table_reference)
+            bq_table = self.bigquery_client.get_table(table_reference, timeout=self.REQUEST_TIMEOUT)
             table_exist = True
             if incremental:
                 schema_mapper.is_table_definition_in_match_with_bigquery(
@@ -62,7 +64,7 @@ class Writer(object):
                     bq_table
                 )
             else:
-                self.bigquery_client.delete_table(table_reference)
+                self.bigquery_client.delete_table(table_reference, timeout=self.REQUEST_TIMEOUT)
                 table_exist = False
         except bq_exceptions.NotFound:
             table_exist = False
@@ -75,7 +77,7 @@ class Writer(object):
 
         if not table_exist:
             try:
-                self.bigquery_client.create_table(table)
+                self.bigquery_client.create_table(table, timeout=self.REQUEST_TIMEOUT)
             except bq_exceptions.BadRequest as err:
                 message = 'Cannot create table %s: %s' % (
                     table_name,
