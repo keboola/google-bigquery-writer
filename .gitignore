@@ -6,3 +6,5 @@ __pycache__
 /test/data/sample_populated
 /.pytest_cache
 /venv
+/data
+*.DS_Store

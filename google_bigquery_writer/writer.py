@@ -5,11 +5,17 @@ from google_bigquery_writer import schema_mapper
 from google.api_core.exceptions import BadRequest
 from google.cloud.bigquery.dataset import DatasetReference
 
+import csv
+import math
+import os
+import subprocess
 import time
 
 
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
+    MAX_CHUNK_SIZE_MB = 4_000
+    FILES_IN_PATH = '/home/data/in/files'
 
     def __init__(self, bigquery_client: bigquery.Client):
         self.bigquery_client = bigquery_client
@@ -119,10 +125,31 @@ class Writer(object):
             incremental
         )
 
+        size_mb = int(os.path.getsize(csv_file_path) / (1024 * 1024))
+
+        job = None
+        if size_mb > self.MAX_CHUNK_SIZE_MB:
+            nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
+            print(f"File will be split into {nr_of_slices} chunks because it exceeds the 4GB file limit.")
+            self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
+            os.remove(csv_file_path)
+            all_files = os.listdir(self.FILES_IN_PATH)
+            for file in all_files:
+                print(f"Processing chunk {file}")
+                file_path = os.path.join(self.FILES_IN_PATH, file)
+                job = self._write_table(file_path, table_reference, dataset_name, table_definition, 0)
+        else:
+            job = self._write_table(csv_file_path, table_reference, dataset_name, table_definition, 1)
+
+        if job:
+            return job
+        raise UserException(f"Error occured during chunk processing, cannot return the result of the last job.")
+
+    def _write_table(self, csv_file_path: str, table_reference, dataset_name, table_definition, skip: int):
         with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()
             job_config.source_format = 'CSV'
-            job_config.skip_leading_rows = 1
+            job_config.skip_leading_rows = skip
             job_config.allow_quoted_newlines = True
 
             try:
@@ -196,3 +223,29 @@ class Writer(object):
                     job.errors
                 )
                 raise UserException(message)
+
+    def _split_csv(self, csv_file, table_name, nr_of_slices):
+        try:
+            result = subprocess.run(
+                [
+                    '/home/cli_linux_amd64',
+                    '--table-name=' + str(table_name),
+                    '--table-input-path=' + csv_file,
+                    '--mode=slices',
+                    '--number-of-slices=' + str(nr_of_slices),
+                    '--table-output-path=' + self.FILES_IN_PATH,
+                    '--table-output-manifest-path=/home/data/dump.manifest',
+                    '--gzip=false'
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+
+            if result.returncode != 0:
+                raise UserException(f"Error running cli_linux_amd64: {result.stderr.strip()}")
+
+        except Exception as e:
+            raise UserException(f"Error running cli_linux_amd64: {e}")
+
+    def _calculate_slices(self, size_mb, max_chunk_size_mb):
+        return math.ceil(size_mb / max_chunk_size_mb)

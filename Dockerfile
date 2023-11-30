@@ -17,5 +17,9 @@ RUN pip freeze
 COPY . /home/
 WORKDIR /home/
 
+# add permission to run Split Table CLI
+RUN chmod +x cli_linux_amd64
+
+
 # Run the application
 CMD python -u ./main.py
