@@ -13,7 +13,7 @@ import time
 
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
-    MAX_CHUNK_SIZE_MB = 4000
+    MAX_CHUNK_SIZE_MB = 500
     TEMP_PATH = '/home/data/temp'
 
     def __init__(self, bigquery_client: bigquery.Client):
@@ -129,8 +129,8 @@ class Writer(object):
         job = None
         if size_mb > self.MAX_CHUNK_SIZE_MB:
             nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
-            print(f"File will be split into {nr_of_slices} chunks because it exceeds the 4GB file limit. "
-                  f"File size: {size_mb}MB")
+            print(f"File will be split into {nr_of_slices} chunks because it exceeds the {self.MAX_CHUNK_SIZE_MB}"
+                  f"MB file limit - file size: {size_mb}MB")
             os.makedirs(self.TEMP_PATH, exist_ok=True)
             self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
             os.remove(csv_file_path)
