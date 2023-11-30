@@ -13,7 +13,7 @@ import time
 
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
-    MAX_CHUNK_SIZE_MB = 400
+    MAX_CHUNK_SIZE_MB = 4000
     TEMP_PATH = '/home/data/temp'
 
     def __init__(self, bigquery_client: bigquery.Client):
