@@ -130,7 +130,7 @@ class Writer(object):
         if size_mb > self.MAX_CHUNK_SIZE_MB:
             nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
             print(f"File will be split into {nr_of_slices} chunks because it exceeds the 4GB file limit. "
-                  f"File size: {size_mb}")
+                  f"File size: {size_mb}MB")
             os.makedirs(self.TEMP_PATH, exist_ok=True)
             self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
             os.remove(csv_file_path)
