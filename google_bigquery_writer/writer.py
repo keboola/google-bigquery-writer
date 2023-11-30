@@ -13,8 +13,8 @@ import time
 
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
-    MAX_CHUNK_SIZE_MB = 4_000
-    FILES_IN_PATH = '/home/data/in/files'
+    MAX_CHUNK_SIZE_MB = 400
+    TEMP_PATH = '/home/data/temp'
 
     def __init__(self, bigquery_client: bigquery.Client):
         self.bigquery_client = bigquery_client
@@ -129,13 +129,15 @@ class Writer(object):
         job = None
         if size_mb > self.MAX_CHUNK_SIZE_MB:
             nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
-            print(f"File will be split into {nr_of_slices} chunks because it exceeds the 4GB file limit.")
+            print(f"File will be split into {nr_of_slices} chunks because it exceeds the 4GB file limit. "
+                  f"File size: {size_mb}")
+            os.makedirs(self.TEMP_PATH, exist_ok=True)
             self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
             os.remove(csv_file_path)
-            all_files = os.listdir(self.FILES_IN_PATH)
+            all_files = os.listdir(self.TEMP_PATH)
             for file in all_files:
                 print(f"Processing chunk {file}")
-                file_path = os.path.join(self.FILES_IN_PATH, file)
+                file_path = os.path.join(self.TEMP_PATH, file)
                 job = self._write_table(file_path, table_reference, dataset_name, table_definition, 0)
         else:
             job = self._write_table(csv_file_path, table_reference, dataset_name, table_definition, 1)
@@ -232,7 +234,7 @@ class Writer(object):
                     '--table-input-path=' + csv_file,
                     '--mode=slices',
                     '--number-of-slices=' + str(nr_of_slices),
-                    '--table-output-path=' + self.FILES_IN_PATH,
+                    '--table-output-path=' + self.TEMP_PATH,
                     '--table-output-manifest-path=/home/data/dump.manifest',
                     '--gzip=false'
                 ],
