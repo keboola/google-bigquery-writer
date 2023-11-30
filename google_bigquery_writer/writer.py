@@ -5,7 +5,6 @@ from google_bigquery_writer import schema_mapper
 from google.api_core.exceptions import BadRequest
 from google.cloud.bigquery.dataset import DatasetReference
 
-import csv
 import math
 import os
 import subprocess
@@ -143,7 +142,7 @@ class Writer(object):
 
         if job:
             return job
-        raise UserException(f"Error occured during chunk processing, cannot return the result of the last job.")
+        raise UserException("Error occured during chunk processing, cannot return the result of the last job.")
 
     def _write_table(self, csv_file_path: str, table_reference, dataset_name, table_definition, skip: int):
         with open(csv_file_path, 'rb') as readable:
