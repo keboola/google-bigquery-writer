@@ -163,7 +163,7 @@ class Writer(object):
                            bq_exceptions.ClientError, bq_exceptions.ServerError),
                           max_tries=5)
     def _write_table(self, csv_file_path: str, table_reference, skip: int):
-        print(f"Processing chunk {csv_file_path}")
+        # print(f"Processing chunk {csv_file_path}")
         with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()
             job_config.source_format = 'CSV'
