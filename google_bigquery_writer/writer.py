@@ -5,6 +5,7 @@ from google_bigquery_writer import schema_mapper
 from google.api_core.exceptions import BadRequest
 from google.cloud.bigquery.dataset import DatasetReference
 
+import backoff
 import math
 import os
 import subprocess
@@ -91,16 +92,12 @@ class Writer(object):
                 raise UserException(message)
         return table_reference
 
-    def write_table(
-            self,
-            csv_file_path: str,
-            dataset_name: str,
-            table_definition: dict,
-            incremental: bool = False
-    ) -> bigquery.LoadJob:
+    def write_table(self, csv_file_path: str, dataset_name: str, table_definition: dict, incremental: bool = False) \
+            -> bigquery.LoadJob:
+
         if dataset_name == '' or dataset_name is None:
             raise UserException('Dataset name not specified.')
-        if table_definition['dbName'] == ''\
+        if table_definition['dbName'] == '' \
                 or table_definition['dbName'] is None:
             raise UserException('Table name not specified.')
 
@@ -127,103 +124,77 @@ class Writer(object):
         size_mb = int(os.path.getsize(csv_file_path) / (1024 * 1024))
 
         job = None
-        if size_mb > self.MAX_CHUNK_SIZE_MB:
-            nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
-            print(f"File will be split into {nr_of_slices} chunks because it exceeds the {self.MAX_CHUNK_SIZE_MB}"
-                  f"MB file limit - file size: {size_mb}MB")
-            os.makedirs(self.TEMP_PATH, exist_ok=True)
-            self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
-            os.remove(csv_file_path)
-            all_files = os.listdir(self.TEMP_PATH)
-            for file in all_files:
-                print(f"Processing chunk {file}")
-                file_path = os.path.join(self.TEMP_PATH, file)
-                job = self._write_table(file_path, table_reference, dataset_name, table_definition, 0)
-        else:
-            job = self._write_table(csv_file_path, table_reference, dataset_name, table_definition, 1)
+        try:
+            if size_mb > self.MAX_CHUNK_SIZE_MB:
+                nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
+                print(f"File will be split into {nr_of_slices} chunks because it exceeds the {self.MAX_CHUNK_SIZE_MB}"
+                      f"MB file limit - file size: {size_mb}MB")
+                os.makedirs(self.TEMP_PATH, exist_ok=True)
+                self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
+                os.remove(csv_file_path)
+                all_files = os.listdir(self.TEMP_PATH)
+                for file in all_files:
+                    print(f"Processing chunk {file}")
+                    file_path = os.path.join(self.TEMP_PATH, file)
+                    job = self._write_table(file_path, table_reference, 0)
+            else:
+                job = self._write_table(csv_file_path, table_reference, 1)
+        except (ConnectionError, req_exceptions.RequestException, bq_exceptions.ClientError,
+                bq_exceptions.ServerError) as e:
+            raise UserException(f"Loading data into table {dataset_name}.{table_definition['dbName']} failed: {e}")
 
         if job:
             return job
         raise UserException("Error occured during chunk processing, cannot return the result of the last job.")
 
-    def _write_table(self, csv_file_path: str, table_reference, dataset_name, table_definition, skip: int):
+    @backoff.on_exception(backoff.expo,
+                          (ConnectionError, req_exceptions.RequestException,
+                           bq_exceptions.ClientError, bq_exceptions.ServerError),
+                          max_tries=5)
+    def _write_table(self, csv_file_path: str, table_reference, skip: int):
         with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()
             job_config.source_format = 'CSV'
             job_config.skip_leading_rows = skip
             job_config.allow_quoted_newlines = True
 
-            try:
-                job = self.bigquery_client.load_table_from_file(
-                    readable,
-                    table_reference,
-                    job_config=job_config
-                )
-            except req_exceptions.ConnectionError as err:
-                message = 'Loading data into table %s.%s failed: %s' % (
-                    dataset_name,
-                    table_definition['dbName'],
-                    str(err)
-                )
-                raise UserException(message)
+            job = self.bigquery_client.load_table_from_file(
+                readable,
+                table_reference,
+                job_config=job_config
+            )
+
             return job
 
-    def write_table_sync(
-            self,
-            csv_file_path: str,
-            dataset_name: str,
-            table_definition: dict,
-            incremental: bool = False,
-            polling_max_retries: int = 360,
-            polling_delay: int = 5
-    ) -> None:
-        upload_max_retries = 5
-        upload_retries = 0
-        upload_finished = False
-        while upload_retries < upload_max_retries and upload_finished is False:
-            upload_retries += 1
-            try:
-                job = self.write_table(
-                    csv_file_path,
-                    dataset_name,
-                    table_definition,
-                    incremental=incremental
-                )
-            except (bq_exceptions.BadRequest, bq_exceptions.Unauthorized, bq_exceptions.InternalServerError) as err:
-                if upload_retries < upload_max_retries:
-                    message = 'Retrying upload: %s' % (
-                        str(err)
-                    )
-                    print(message)
-                    continue
-                message = 'Cannot upload dataset %s: %s' % (
-                    dataset_name,
-                    str(err)
-                )
-                raise UserException(message)
+    def write_table_sync(self, csv_file_path: str, dataset_name: str, table_definition: dict, incremental: bool = False,
+                         polling_max_retries: int = 360, polling_delay: int = 5) -> None:
+        job = self.write_table(
+            csv_file_path,
+            dataset_name,
+            table_definition,
+            incremental=incremental)
 
-            polling_retries = 0
-            while polling_retries < polling_max_retries and job.state != u'DONE':
-                time.sleep(polling_delay)
-                polling_retries += 1
-                job.reload()
+        polling_retries = 0
+        while polling_retries < polling_max_retries and job.state != u'DONE':
+            time.sleep(polling_delay)
+            polling_retries += 1
+            job.reload()
 
-            upload_finished = True
-            if job.state != u'DONE':
-                message = 'Loading data into table %s.%s didn\'t finish in %s ' \
-                    'seconds' % (
-                        dataset_name,
-                        table_definition['dbName'],
-                        polling_delay*polling_max_retries
-                    )
-                raise UserException(message)
-            if job.errors:
-                message = 'Loading data into table %s.%s failed: %s' % (
-                    dataset_name,
-                    table_definition['dbName'],
-                    job.errors
-                )
-                raise UserException(message)
+        if job.state != u'DONE':
+            message = 'Loading data into table %s.%s didn\'t finish in %s ' \
+                      'seconds' % (
+                          dataset_name,
+                          table_definition['dbName'],
+                          polling_delay * polling_max_retries
+                      )
+            raise UserException(message)
+        if job.errors:
+            message = 'Loading data into table %s.%s failed: %s' % (
+                dataset_name,
+                table_definition['dbName'],
+                job.errors
+            )
+            raise UserException(message)
 
     def _split_csv(self, csv_file, table_name, nr_of_slices):
         try:
