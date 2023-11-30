@@ -1,4 +1,4 @@
-FROM python:3.8.6
+FROM python:3.6
 
 # Install packages
 RUN pip install --no-cache-dir --ignore-installed \
