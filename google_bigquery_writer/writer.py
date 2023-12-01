@@ -13,7 +13,6 @@ from concurrent.futures import as_completed
 import backoff
 import math
 import os
-import psutil
 import subprocess
 import time
 
@@ -21,11 +20,11 @@ import time
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
     MAX_CHUNK_SIZE_MB = 1_000
+    MAX_WORKERS = 5  # https://cloud.google.com/bigquery/quotas#standard_tables
     TEMP_PATH = '/home/data/temp'
 
     def __init__(self, bigquery_client: bigquery.Client):
         self.bigquery_client = bigquery_client
-        self.MAX_WORKERS = self._set_workers()
 
     def obtain_dataset(self, dataset_name: str) -> bigquery.Dataset:
         dataset_reference = DatasetReference(self.bigquery_client.project, dataset_name)
@@ -237,10 +236,3 @@ class Writer(object):
     @staticmethod
     def _calculate_slices(size_mb, max_chunk_size_mb):
         return math.ceil(size_mb / max_chunk_size_mb)
-
-    @staticmethod
-    def _set_workers() -> int:
-        num_of_threads = int(psutil.cpu_count() / psutil.cpu_count(logical=False))
-        workers = num_of_threads * 8
-        print(f"Max threads set to {workers} - (num_of_threads*8).")
-        return workers
