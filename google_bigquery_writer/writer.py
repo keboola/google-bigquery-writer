@@ -240,7 +240,7 @@ class Writer(object):
 
     @staticmethod
     def _set_workers() -> int:
-        workers = int(psutil.cpu_count() / psutil.cpu_count(logical=False))
-        print(f"Number of threads set to {workers}")
+        num_of_threads = int(psutil.cpu_count() / psutil.cpu_count(logical=False))
+        workers = num_of_threads * 8
+        print(f"Number of threads set to {workers}. (num_of_threads*8)")
         return workers
-
