@@ -211,27 +211,23 @@ class Writer(object):
                 raise UserException(message)
 
     def _split_csv(self, csv_file, table_name, nr_of_slices):
-        try:
-            result = subprocess.run(
-                [
-                    '/home/cli_linux_amd64',
-                    '--table-name=' + str(table_name),
-                    '--table-input-path=' + csv_file,
-                    '--mode=slices',
-                    '--number-of-slices=' + str(nr_of_slices),
-                    '--table-output-path=' + self.TEMP_PATH,
-                    '--table-output-manifest-path=/home/data/dump.manifest',
-                    '--gzip=false'
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
+        result = subprocess.run(
+            [
+                '/home/cli_linux_amd64',
+                '--table-name=' + str(table_name),
+                '--table-input-path=' + csv_file,
+                '--mode=slices',
+                '--number-of-slices=' + str(nr_of_slices),
+                '--table-output-path=' + self.TEMP_PATH,
+                '--table-output-manifest-path=/home/data/dump.manifest',
+                '--gzip=false'
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
 
-            if result.returncode != 0:
-                raise UserException(f"Error running cli_linux_amd64: {result.stderr.strip()}")
-
-        except Exception as e:
-            raise UserException(f"Error running cli_linux_amd64: {e}")
+        if result.returncode != 0:
+            print(f"Error running cli_linux_amd64: {result.stderr.strip()}")
 
     @staticmethod
     def _calculate_slices(size_mb, max_chunk_size_mb):
