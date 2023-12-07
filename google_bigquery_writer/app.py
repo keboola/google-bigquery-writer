@@ -143,12 +143,10 @@ class App:
         parameters = self.cfg.get_parameters()
         # check for empty tables
         if isinstance(parameters, list):
-            message = 'There are no tables specified in the configuration.'
-            raise UserException(message)
+            raise UserException('There are no tables specified in the configuration.')
         tables = parameters.get('tables')
-        if tables is None:
-            message = 'There are no tables specified in the configuration.'
-            raise UserException(message)
+        if not tables:
+            raise UserException('There are no tables specified in the configuration.')
 
         for table in tables:
             # skip tables with export: false
@@ -178,20 +176,24 @@ class App:
                 table['dbName']
             ))
 
-            try:
-                self.get_writer().write_table_sync(
-                    csv_file_path,
-                    parameters.get('dataset'),
-                    table,
-                    incremental=incremental
-                )
-            except RefreshError:
-                message = 'Cannot connect to BigQuery.' \
-                          ' Please try reauthorizing.'
-                raise UserException(message)
-            except google.api_core.exceptions.Forbidden as err:
-                raise UserException(err.message)
+            self._process_upload(csv_file_path, parameters, table, incremental)
+
         print('BigQuery Writer finished')
+
+    def _process_upload(self, csv_file_path: str, parameters: dict, table: dict, incremental: bool):
+        try:
+            self.get_writer().write_table_sync(
+                csv_file_path,
+                parameters.get('dataset'),
+                table,
+                incremental=incremental
+            )
+        except RefreshError:
+            message = 'Cannot connect to BigQuery.' \
+                      ' Please try reauthorizing.'
+            raise UserException(message)
+        except google.api_core.exceptions.Forbidden as err:
+            raise UserException(err.message)
 
     def action_list(self):
         client = bigquery.client.Client(

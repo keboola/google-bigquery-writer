@@ -23,7 +23,7 @@ class TestWriter(GoogleBigQueryWriterTest):
             os.environ.get('BIGQUERY_DATASET'),
             fixtures.get_table_configuration()
         )
-        assert job.state == 'RUNNING'
+        assert job[0].state == 'RUNNING'
 
         client = self.get_client('service_account_manage')
         dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
