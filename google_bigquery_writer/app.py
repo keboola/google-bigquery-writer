@@ -44,11 +44,12 @@ class App:
             raise UserException('Authorization missing.')
 
     def get_credentials(self):
-        parameters = self.cfg.get_parameters()
-        if parameters.get('service_account'):
-            private_key = parameters.get('service_account').get('#private_key')
-            client_email = parameters.get('service_account').get('client_email')
-            token_uri = parameters.get('service_account').get('token_uri')
+        credentials_json = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
+                            or self.cfg.get_parameters().get('service_account'))
+        if credentials_json:
+            private_key = credentials_json.get('#private_key')
+            client_email = credentials_json.get('client_email')
+            token_uri = credentials_json.get('token_uri')
 
             service_account_info = {
                 'private_key': private_key,
@@ -89,10 +90,10 @@ class App:
         if self.writer:
             return self.writer
 
-        if (
-                self.cfg.get_parameters().get('service_account') and
-                self.cfg.get_parameters().get('service_account').get('project_id')
-        ):
+        if self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id'):
+            project = self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
+        elif (self.cfg.get_parameters().get('service_account') and
+              self.cfg.get_parameters().get('service_account').get('project_id')):
             project = self.cfg.get_parameters().get('service_account').get('project_id')
         elif self.cfg.get_parameters().get('project'):
             project = self.cfg.get_parameters().get('project')
@@ -125,7 +126,8 @@ class App:
                 (
                         not self.cfg.get_parameters().get('service_account') or
                         not self.cfg.get_parameters().get('service_account').get('project_id')
-                )
+                ) and
+                not self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
         ):
             message = 'Google BigQuery project not specified in the configuration.'
             raise UserException(message)
