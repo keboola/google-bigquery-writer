@@ -1,0 +1,41 @@
+{
+    "parameters": {
+        "service_account": {
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy",
+            "project_id": "dummy"
+        },
+        "dataset": "sample-dataset",
+        "tables": [
+            {
+                "dbName": "table1",
+                "export": true,
+                "tableId": "in.c-main.table1",
+                "items": [
+                    {
+                        "name": "id",
+                        "dbName": "id",
+                        "type": "VARCHAR",
+                        "size": "255",
+                        "nullable": false,
+                        "default": ""
+                    }
+                ]
+            }
+        ]
+    },
+    "image_parameters": {
+        "service_account": {
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy"
+        }
+    },
+    "storage": {
+        "input": {
+            "tables": []
+        }
+    },
+    "action": "invalid"
+}

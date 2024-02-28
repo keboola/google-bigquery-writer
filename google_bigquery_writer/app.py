@@ -19,29 +19,28 @@ class App:
         self.writer = None
 
     def validate_credentials(self):
-        parameters = self.cfg.get_parameters()
-        if parameters.get('service_account'):
-            private_key = parameters.get('service_account').get('#private_key')
+        parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
+                      or self.cfg.get_parameters().get('service_account'))
+        if parameters:
+            private_key = parameters.get('#private_key')
             if private_key == '' or private_key is None:
                 raise UserException('Service account private key missing.')
 
-            client_email = parameters.get('service_account').get('client_email')
+            client_email = parameters.get('client_email')
             if client_email == '' or client_email is None:
                 raise UserException('Service account client email missing.')
 
-            token_uri = parameters.get('service_account').get('token_uri')
+            token_uri = parameters.get('token_uri')
             if token_uri == '' or token_uri is None:
                 raise UserException('Service account token URI missing.')
 
-            project_id = parameters.get('service_account').get('project_id')
+            project_id = parameters.get('project_id')
             if project_id == '' or project_id is None:
                 raise UserException('Service account project id missing.')
 
-        if (
-                self.cfg.get_oauthapi_data() == {} and
-                not parameters.get('service_account')
-        ):
-            raise UserException('Authorization missing.')
+        else:
+            if not self.cfg.get_oauthapi_data():
+                raise UserException('Authorization missing.')
 
     def get_credentials(self):
         credentials_json = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
