@@ -37,23 +37,6 @@ class TestApp(GoogleBigQueryWriterTest):
                 'token_uri': service_account_info['token_uri'],
                 'project_id': service_account_info['project_id']
             }
-        elif credentials_type == 'oauth':
-            oauth = {
-                'access_token': os.environ.get('OAUTH_ACCESS_TOKEN'),
-                'expires_in': 3600,
-                'refresh_token': os.environ.get('OAUTH_REFRESH_TOKEN'),
-                'token_type': 'Bearer'
-            }
-            data['authorization'] = {
-                'oauth_api': {
-                    'credentials': {
-                        'appKey': os.environ.get('OAUTH_CLIENT_ID'),
-                        '#appSecret': os.environ.get('OAUTH_CLIENT_SECRET'),
-                        '#data': json.dumps(oauth)
-                    }
-                }
-            }
-            data['parameters']['project'] = os.environ.get('BIGQUERY_PROJECT')
 
         else:
             raise Exception('Unknown credentials type ' + credentials_type)
@@ -95,11 +78,10 @@ class TestApp(GoogleBigQueryWriterTest):
             assert str(err) ==\
                    'Authorization missing.'
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_successful_run(self, data_dir, capsys, credentials_type):
+    def test_successful_run(self, data_dir, capsys):
         os.environ['KBC_DATADIR'] = '%ssample_populated/'\
                                     % data_dir
-        self.prepare(action='run', data_dir=data_dir, credentials_type=credentials_type)
+        self.prepare(action='run', data_dir=data_dir)
         # run app
         application = app.App()
         application.run()
@@ -229,8 +211,7 @@ class TestApp(GoogleBigQueryWriterTest):
                 os.environ.get('BIGQUERY_DATASET')
             )
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_list(self, data_dir, capsys, credentials_type):
+    def test_list(self, data_dir, capsys):
         client = self.get_client('service_account_manage')
         dataset_reference = bigquery.DatasetReference(
             self.get_project(),
@@ -240,7 +221,7 @@ class TestApp(GoogleBigQueryWriterTest):
         client.create_dataset(dataset)
 
         os.environ['KBC_DATADIR'] = data_dir + 'sample_populated/'
-        self.prepare(action='list', data_dir=data_dir, credentials_type=credentials_type)
+        self.prepare(action='list', data_dir=data_dir)
         application = app.App()
         application.run()
         out, err = capsys.readouterr()

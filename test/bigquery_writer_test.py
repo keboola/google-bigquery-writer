@@ -1,6 +1,5 @@
 from google.cloud import exceptions
 from google.cloud.bigquery.dataset import DatasetReference
-import google.oauth2.credentials
 import os
 from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
@@ -20,9 +19,7 @@ class GoogleBigQueryWriterTest(object):
 
     def get_client(self, credentials_type='service_account'):
         if self.bigquery_client is None:
-            if credentials_type == 'oauth':
-                credentials = self.get_oauth_credentials()
-            elif credentials_type == 'service_account':
+            if credentials_type == 'service_account':
                 credentials = self.get_service_account_user_credentials()
             elif credentials_type == 'service_account_manage':
                 credentials = self.get_service_account_manage_credentials()
@@ -54,15 +51,6 @@ class GoogleBigQueryWriterTest(object):
         return service_account.Credentials.from_service_account_info(
             service_account_info,
             scopes=scopes
-        )
-
-    def get_oauth_credentials(self):
-        return google.oauth2.credentials.Credentials(
-            os.environ.get('OAUTH_ACCESS_TOKEN'),
-            token_uri='https://accounts.google.com/o/oauth2/token',
-            client_id=os.environ.get('OAUTH_CLIENT_ID'),
-            client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
-            refresh_token=os.environ.get('OAUTH_REFRESH_TOKEN')
         )
 
     def delete_dataset(self):

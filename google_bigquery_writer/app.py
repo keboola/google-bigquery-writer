@@ -1,7 +1,7 @@
 from keboola import docker
 from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
-import google.oauth2.credentials
+import google.api_core
 from google.cloud import bigquery
 from google.auth.exceptions import RefreshError
 import json
@@ -39,48 +39,36 @@ class App:
                 raise UserException('Service account project id missing.')
 
         else:
-            if not self.cfg.get_oauthapi_data():
-                raise UserException('Authorization missing.')
+            raise UserException('Authorization missing.')
 
     def get_credentials(self):
         credentials_json = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
                             or self.cfg.get_parameters().get('service_account'))
-        if credentials_json:
-            private_key = credentials_json.get('#private_key')
-            client_email = credentials_json.get('client_email')
-            token_uri = credentials_json.get('token_uri')
 
-            service_account_info = {
-                'private_key': private_key,
-                'client_email': client_email,
-                'token_uri': token_uri
-            }
+        private_key = credentials_json.get('#private_key')
+        client_email = credentials_json.get('client_email')
+        token_uri = credentials_json.get('token_uri')
 
-            scopes = [
-                'https://www.googleapis.com/auth/bigquery'
-            ]
-            try:
-                return service_account.Credentials.from_service_account_info(
-                    service_account_info,
-                    scopes=scopes
-                )
-            except ValueError as err:
-                message = 'Cannot get credentials from service account %s. Reason "%s".' % (
-                    client_email,
-                    str(err)
-                )
-                raise UserException(message)
+        service_account_info = {
+            'private_key': private_key,
+            'client_email': client_email,
+            'token_uri': token_uri
+        }
 
-        else:
-            # fallback to oauth
-            oauthapi_data = self.cfg.get_oauthapi_data()
-            return google.oauth2.credentials.Credentials(
-                oauthapi_data.get('access_token'),
-                token_uri='https://accounts.google.com/o/oauth2/token',
-                client_id=self.cfg.get_oauthapi_appkey(),
-                client_secret=self.cfg.get_oauthapi_appsecret(),
-                refresh_token=oauthapi_data.get('refresh_token')
+        scopes = [
+            'https://www.googleapis.com/auth/bigquery'
+        ]
+        try:
+            return service_account.Credentials.from_service_account_info(
+                service_account_info,
+                scopes=scopes
             )
+        except ValueError as err:
+            message = 'Cannot get credentials from service account %s. Reason "%s".' % (
+                client_email,
+                str(err)
+            )
+            raise UserException(message)
 
     def get_writer(self):
         """
