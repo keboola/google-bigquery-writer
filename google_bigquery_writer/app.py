@@ -87,7 +87,8 @@ class App:
 
         bigquery_client_factory = BigqueryClientFactory(
             project,
-            self.get_credentials()
+            self.get_credentials(),
+            location=self.cfg.get_parameters().get('location', None)
         )
 
         bigquery_client = bigquery_client_factory.create()
@@ -197,7 +198,7 @@ class App:
             for project in projects:
                 client = bigquery.client.Client(
                     credentials=self.get_credentials(),
-                    project=project.project_id
+                    project=project.project_id,
                 )
                 datasets = list(client.list_datasets())
                 response['projects'].append({

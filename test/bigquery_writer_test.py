@@ -17,7 +17,7 @@ class GoogleBigQueryWriterTest(object):
     def get_project(self):
         return json.loads(os.environ.get('SERVICE_ACCOUNT_MANAGE'))['project_id']
 
-    def get_client(self, credentials_type='service_account'):
+    def get_client(self, credentials_type='service_account', location: str = 'US'):
         if self.bigquery_client is None:
             if credentials_type == 'service_account':
                 credentials = self.get_service_account_user_credentials()
@@ -28,7 +28,8 @@ class GoogleBigQueryWriterTest(object):
 
             self.bigquery_client_factory = BigqueryClientFactory(
                 self.get_project(),
-                credentials
+                credentials,
+                location=location
             )
             self.bigquery_client = self.bigquery_client_factory.create()
         return self.bigquery_client
