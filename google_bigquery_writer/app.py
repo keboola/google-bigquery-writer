@@ -21,25 +21,25 @@ class App:
     def validate_credentials(self):
         parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
                       or self.cfg.get_parameters().get('service_account'))
-        if parameters:
-            private_key = parameters.get('#private_key')
-            if private_key == '' or private_key is None:
-                raise UserException('Service account private key missing.')
 
-            client_email = parameters.get('client_email')
-            if client_email == '' or client_email is None:
-                raise UserException('Service account client email missing.')
-
-            token_uri = parameters.get('token_uri')
-            if token_uri == '' or token_uri is None:
-                raise UserException('Service account token URI missing.')
-
-            project_id = parameters.get('project_id')
-            if project_id == '' or project_id is None:
-                raise UserException('Service account project id missing.')
-
-        else:
+        if not parameters:
             raise UserException('Authorization missing.')
+
+        private_key = parameters.get('#private_key')
+        if private_key == '' or private_key is None:
+            raise UserException('Service account private key missing.')
+
+        client_email = parameters.get('client_email')
+        if client_email == '' or client_email is None:
+            raise UserException('Service account client email missing.')
+
+        token_uri = parameters.get('token_uri')
+        if token_uri == '' or token_uri is None:
+            raise UserException('Service account token URI missing.')
+
+        project_id = parameters.get('project_id')
+        if project_id == '' or project_id is None:
+            raise UserException('Service account project id missing.')
 
     def get_credentials(self):
         credentials_json = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
@@ -77,13 +77,13 @@ class App:
         if self.writer:
             return self.writer
 
-        if self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id'):
-            project = self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
-        elif (self.cfg.get_parameters().get('service_account') and
-              self.cfg.get_parameters().get('service_account').get('project_id')):
-            project = self.cfg.get_parameters().get('service_account').get('project_id')
-        elif self.cfg.get_parameters().get('project'):
-            project = self.cfg.get_parameters().get('project')
+        config_data_service_account = self.cfg.config_data.get('image_parameters', {}).get('service_account', {})
+        parameters_service_account = self.cfg.get_parameters().get('service_account')
+
+        project = (
+                self.cfg.get_parameters().get('project', None) or
+                config_data_service_account.get('project_id', None) or
+                parameters_service_account.get('project_id'))
 
         bigquery_client_factory = BigqueryClientFactory(
             project,
