@@ -1,5 +1,10 @@
 {
     "parameters": {
+        "service_account": {
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy"
+        },
         "dataset": "sample-schema",
         "items": [
             {
@@ -8,12 +13,5 @@
                 "tableId": "in.c-bucket.table1"
             }
         ]
-    },
-    "authorization": {
-        "oauth_api": {
-            "credentials": {
-                "#data": "{\"dummy\": true}"
-            }
-        }
     }
 }

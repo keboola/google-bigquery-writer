@@ -45,9 +45,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
                                ' You must specify refresh_token, token_uri,' \
                                ' client_id, and client_secret.'
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_write_table_sync_error_too_many_values(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_write_table_sync_error_too_many_values(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -64,9 +63,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'Too many values in line' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_write_table_sync_error_missing_values(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_write_table_sync_error_missing_values(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         my_writer.write_table_sync(
             data_dir + 'simple_csv_with_extra_column/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -83,9 +81,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'contains only 2 columns' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_write_table_sync_error_invalid_datatype(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_write_table_sync_error_invalid_datatype(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -102,9 +99,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'column_index: 1 column_name: "col2" column_type: INT64 value: "val2"' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_create_dataset_invalid_name(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_create_dataset_invalid_name(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
@@ -115,9 +111,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'Invalid dataset ID "writer_gh_actions INVALID"' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_create_table_invalid_name(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_create_table_invalid_name(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
@@ -128,9 +123,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'Cannot create table' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_create_table_invalid_schema_datatype(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_create_table_invalid_schema_datatype(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         try:
             my_writer.write_table_sync(
                 data_dir + 'simple_csv/in/tables/table.csv',
@@ -141,9 +135,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'INVALID-DATATYPE is not a valid value' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_write_table_sync_with_invalid_column_order(self, data_dir, credentials_type):
-        my_writer = writer.Writer(self.get_client(credentials_type=credentials_type))
+    def test_write_table_sync_with_invalid_column_order(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
         my_writer.write_table_sync(
             data_dir + 'simple_csv/in/tables/table.csv',
             os.environ.get('BIGQUERY_DATASET'),
@@ -163,12 +156,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
                    'col2, col1. Expected BigQuery: col1, col2.'\
                    in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_invalid_project(self, data_dir, credentials_type):
-        if (credentials_type == 'service_account'):
-            credentials = self.get_service_account_user_credentials()
-        else:
-            credentials = self.get_oauth_credentials()
+    def test_invalid_project(self, data_dir):
+        credentials = self.get_service_account_user_credentials()
 
         bigquery_client = bigquery.Client(
             'invalid-project',
@@ -186,9 +175,8 @@ class TestWriterErrors(GoogleBigQueryWriterTest):
         except exceptions.UserException as err:
             assert 'Project invalid-project was not found.' in str(err)
 
-    @pytest.mark.parametrize('credentials_type', ['oauth', 'service_account'])
-    def test_write_table_connection_error(self, data_dir, credentials_type):
-        client = self.get_client(credentials_type=credentials_type)
+    def test_write_table_connection_error(self, data_dir):
+        client = self.get_client()
         error_msg = "Some connection error!"
         client.load_table_from_file = MagicMock(side_effect=requests.exceptions.ConnectionError(error_msg))
         my_writer = writer.Writer(client)

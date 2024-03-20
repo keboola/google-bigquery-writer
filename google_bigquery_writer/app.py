@@ -1,7 +1,7 @@
 from keboola import docker
 from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
-import google.oauth2.credentials
+import google.api_core
 from google.cloud import bigquery
 from google.auth.exceptions import RefreshError
 import json
@@ -19,69 +19,56 @@ class App:
         self.writer = None
 
     def validate_credentials(self):
-        parameters = self.cfg.get_parameters()
-        if parameters.get('service_account'):
-            private_key = parameters.get('service_account').get('#private_key')
-            if private_key == '' or private_key is None:
-                raise UserException('Service account private key missing.')
+        parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
+                      or self.cfg.get_parameters().get('service_account'))
 
-            client_email = parameters.get('service_account').get('client_email')
-            if client_email == '' or client_email is None:
-                raise UserException('Service account client email missing.')
-
-            token_uri = parameters.get('service_account').get('token_uri')
-            if token_uri == '' or token_uri is None:
-                raise UserException('Service account token URI missing.')
-
-            project_id = parameters.get('service_account').get('project_id')
-            if project_id == '' or project_id is None:
-                raise UserException('Service account project id missing.')
-
-        if (
-                self.cfg.get_oauthapi_data() == {} and
-                not parameters.get('service_account')
-        ):
+        if not parameters:
             raise UserException('Authorization missing.')
+
+        private_key = parameters.get('#private_key')
+        if private_key == '' or private_key is None:
+            raise UserException('Service account private key missing.')
+
+        client_email = parameters.get('client_email')
+        if client_email == '' or client_email is None:
+            raise UserException('Service account client email missing.')
+
+        token_uri = parameters.get('token_uri')
+        if token_uri == '' or token_uri is None:
+            raise UserException('Service account token URI missing.')
+
+        project_id = parameters.get('project_id')
+        if project_id == '' or project_id is None:
+            raise UserException('Service account project id missing.')
 
     def get_credentials(self):
         credentials_json = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
                             or self.cfg.get_parameters().get('service_account'))
-        if credentials_json:
-            private_key = credentials_json.get('#private_key')
-            client_email = credentials_json.get('client_email')
-            token_uri = credentials_json.get('token_uri')
 
-            service_account_info = {
-                'private_key': private_key,
-                'client_email': client_email,
-                'token_uri': token_uri
-            }
+        private_key = credentials_json.get('#private_key')
+        client_email = credentials_json.get('client_email')
+        token_uri = credentials_json.get('token_uri')
 
-            scopes = [
-                'https://www.googleapis.com/auth/bigquery'
-            ]
-            try:
-                return service_account.Credentials.from_service_account_info(
-                    service_account_info,
-                    scopes=scopes
-                )
-            except ValueError as err:
-                message = 'Cannot get credentials from service account %s. Reason "%s".' % (
-                    client_email,
-                    str(err)
-                )
-                raise UserException(message)
+        service_account_info = {
+            'private_key': private_key,
+            'client_email': client_email,
+            'token_uri': token_uri
+        }
 
-        else:
-            # fallback to oauth
-            oauthapi_data = self.cfg.get_oauthapi_data()
-            return google.oauth2.credentials.Credentials(
-                oauthapi_data.get('access_token'),
-                token_uri='https://accounts.google.com/o/oauth2/token',
-                client_id=self.cfg.get_oauthapi_appkey(),
-                client_secret=self.cfg.get_oauthapi_appsecret(),
-                refresh_token=oauthapi_data.get('refresh_token')
+        scopes = [
+            'https://www.googleapis.com/auth/bigquery'
+        ]
+        try:
+            return service_account.Credentials.from_service_account_info(
+                service_account_info,
+                scopes=scopes
             )
+        except ValueError as err:
+            message = 'Cannot get credentials from service account %s. Reason "%s".' % (
+                client_email,
+                str(err)
+            )
+            raise UserException(message)
 
     def get_writer(self):
         """
@@ -90,17 +77,18 @@ class App:
         if self.writer:
             return self.writer
 
-        if self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id'):
-            project = self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
-        elif (self.cfg.get_parameters().get('service_account') and
-              self.cfg.get_parameters().get('service_account').get('project_id')):
-            project = self.cfg.get_parameters().get('service_account').get('project_id')
-        elif self.cfg.get_parameters().get('project'):
-            project = self.cfg.get_parameters().get('project')
+        config_data_service_account = self.cfg.config_data.get('image_parameters', {}).get('service_account', {})
+        parameters_service_account = self.cfg.get_parameters().get('service_account')
+
+        project = (
+                self.cfg.get_parameters().get('project', None) or
+                config_data_service_account.get('project_id', None) or
+                parameters_service_account.get('project_id'))
 
         bigquery_client_factory = BigqueryClientFactory(
             project,
-            self.get_credentials()
+            self.get_credentials(),
+            location=self.cfg.get_parameters().get('location', None)
         )
 
         bigquery_client = bigquery_client_factory.create()
@@ -210,7 +198,7 @@ class App:
             for project in projects:
                 client = bigquery.client.Client(
                     credentials=self.get_credentials(),
-                    project=project.project_id
+                    project=project.project_id,
                 )
                 datasets = list(client.list_datasets())
                 response['projects'].append({

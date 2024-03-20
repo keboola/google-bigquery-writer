@@ -1,5 +1,11 @@
 {
   "parameters": {
+    "service_account": {
+            "#private_key": "dummy",
+            "client_email": "dummy",
+            "token_uri": "dummy",
+            "project_id": "dummy"
+        },
     "project": "dummy",
     "dataset": "dummy",
     "tables": [
@@ -52,15 +58,6 @@
           ]
         }
       ]
-    }
-  },
-  "authorization": {
-    "oauth_api": {
-      "credentials": {
-        "appKey": "invalid",
-        "#appSecret": "invalid",
-        "#data": "{\"access_token\": \"invalid\", \"expires_in\": 3600, \"refresh_token\": \"invalid\", \"token_type\": \"Bearer\"}"
-      }
     }
   },
   "action": "run"

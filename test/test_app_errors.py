@@ -44,7 +44,7 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == \
-                   "Google BigQuery project not specified in the configuration."
+                   "Service account project id missing."
             pass
 
     def test_empty_project(self, data_dir):
@@ -55,7 +55,7 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == \
-                   "Google BigQuery project not specified in the configuration."
+                   "Service account project id missing."
             pass
 
     def test_missing_dataset(self, data_dir):
@@ -97,8 +97,7 @@ class TestAppErrors:
             application.run()
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
-            assert str(err) == 'Cannot connect to BigQuery.' \
-                               ' Please try reauthorizing.'
+            assert str(err) == 'Cannot get credentials from service account dummy. Reason "No key could be detected.".'
             pass
 
     def test_invalid_authorization_private_key(self, data_dir):
@@ -122,4 +121,14 @@ class TestAppErrors:
             pytest.fail("Must raise exception.")
         except exceptions.UserException as err:
             assert str(err) == 'Service account private key missing.'
+            pass
+
+    def test_missing_project_in_image_params(self, data_dir):
+        os.environ['KBC_DATADIR'] = data_dir + "missing_project_image/"
+        application = app.App()
+        try:
+            application.run()
+            pytest.fail("Must raise exception.")
+        except exceptions.UserException as err:
+            assert str(err) == "Service account project id missing."
             pass
