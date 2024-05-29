@@ -44,6 +44,7 @@ class Writer(object):
             )
             raise UserException(message)
 
+    @backoff.on_exception(backoff.expo, bq_exceptions.Forbidden, max_tries=5)
     def verify_project(self) -> None:
         projects = self.bigquery_client.list_projects(timeout=self.REQUEST_TIMEOUT)
         project_list = list(map(
