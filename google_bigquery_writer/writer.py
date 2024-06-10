@@ -221,7 +221,8 @@ class Writer(object):
                 '--number-of-slices=' + str(nr_of_slices),
                 '--table-output-path=' + self.TEMP_PATH,
                 '--table-output-manifest-path=/home/data/dump.manifest',
-                '--gzip=false'
+                '--gzip=false',
+                '--data-type-mode=columns'
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
