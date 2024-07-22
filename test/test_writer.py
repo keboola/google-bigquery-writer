@@ -25,7 +25,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert job[0].state == 'RUNNING'
 
         client = self.get_client('service_account_manage')
-        dataset_reference = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        dataset_reference = client.get_dataset(os.environ.get('BIGQUERY_DATASET'))
         try:
             dataset = client.get_dataset(dataset_reference)
         except exceptions.NotFound:
@@ -67,7 +67,7 @@ class TestWriter(GoogleBigQueryWriterTest):
         )
 
         client = self.get_client('service_account_manage')
-        dataset = client.dataset(os.environ.get('BIGQUERY_DATASET'))
+        dataset = client.get_dataset(os.environ.get('BIGQUERY_DATASET'))
         table_reference = dataset.table(os.environ.get('BIGQUERY_TABLE'))
         table = client.get_table(table_reference)
 
