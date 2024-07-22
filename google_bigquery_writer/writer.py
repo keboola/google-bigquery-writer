@@ -164,7 +164,7 @@ class Writer(object):
                            bq_exceptions.ClientError, bq_exceptions.ServerError),
                           max_tries=5)
     def _write_table(self, csv_file_path: str, table_reference, skip: int):
-        # print(f"Processing chunk {csv_file_path}")
+        print(f"Processing chunk {csv_file_path}")
         with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()
             job_config.source_format = 'CSV'
@@ -176,7 +176,7 @@ class Writer(object):
                 table_reference,
                 job_config=job_config
             )
-
+            print(f"Created BigQuery job {job.job_id}")
             return job
 
     def write_table_sync(self, csv_file_path: str, dataset_name: str, table_definition: dict, incremental: bool = False,
@@ -195,6 +195,8 @@ class Writer(object):
                 polling_retries += 1
                 job.reload()
 
+            print(f"DEBUG: Job {job.job_id} in state {job.state} (polling_retries={polling_retries})")
+
             if job.state != u'DONE':
                 message = 'Loading data into table %s.%s didn\'t finish in %s ' \
                           'seconds' % (
@@ -203,11 +205,20 @@ class Writer(object):
                               polling_delay * polling_max_retries
                           )
                 raise UserException(message)
+
             if job.errors:
                 message = 'Loading data into table %s.%s failed: %s' % (
                     dataset_name,
                     table_definition['dbName'],
                     job.errors
+                )
+                raise UserException(message)
+
+            if job.errorResult:
+                message = 'Loading data into table %s.%s failed: %s' % (
+                    dataset_name,
+                    table_definition['dbName'],
+                    job.errorResult
                 )
                 raise UserException(message)
 
