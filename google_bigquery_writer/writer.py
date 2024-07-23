@@ -1,5 +1,3 @@
-import logging
-
 from requests import exceptions as req_exceptions
 from google.cloud import bigquery, exceptions as bq_exceptions
 from typing import List
