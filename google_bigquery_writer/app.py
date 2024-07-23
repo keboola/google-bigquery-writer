@@ -1,5 +1,3 @@
-import logging
-
 from keboola import docker
 from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
@@ -13,26 +11,11 @@ from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
 from google.oauth2 import service_account
 
-KEY_DEBUG = 'debug'
-
-
 class App:
     def __init__(self):
         self.data_dir = os.environ.get('KBC_DATADIR')
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
-        if self.cfg.get_parameters().get(KEY_DEBUG):
-            self.set_debug_mode()
-
-    @staticmethod
-    def set_debug_mode():
-        """
-        Set the default logger to verbose mode.
-        Returns:
-
-        """
-        logging.getLogger().setLevel(logging.DEBUG)
-        logging.debug('Debug mode enabled.')
 
     def validate_credentials(self):
         parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
