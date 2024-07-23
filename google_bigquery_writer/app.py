@@ -32,6 +32,7 @@ class App:
 
         """
         logging.getLogger().setLevel(logging.DEBUG)
+        logging.debug('Debug mode enabled.')
 
     def validate_credentials(self):
         parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
