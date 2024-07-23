@@ -11,6 +11,7 @@ from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
 from google.oauth2 import service_account
 
+
 class App:
     def __init__(self):
         self.data_dir = os.environ.get('KBC_DATADIR')
