@@ -1,3 +1,5 @@
+import logging
+
 from keboola import docker
 from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
@@ -11,12 +13,25 @@ from google_bigquery_writer.bigquery_client_factory \
     import BigqueryClientFactory
 from google.oauth2 import service_account
 
+KEY_DEBUG = 'debug'
+
 
 class App:
     def __init__(self):
         self.data_dir = os.environ.get('KBC_DATADIR')
         self.cfg = docker.Config(self.data_dir)
         self.writer = None
+        if self.cfg.get_parameters().get(KEY_DEBUG):
+            self.set_debug_mode()
+
+    @staticmethod
+    def set_debug_mode():
+        """
+        Set the default logger to verbose mode.
+        Returns:
+
+        """
+        logging.getLogger().setLevel(logging.DEBUG)
 
     def validate_credentials(self):
         parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
@@ -144,7 +159,7 @@ class App:
                 continue
             if 'items' not in table.keys():
                 message = 'Key \'items\' not defined in ' \
-                          '\'%s\' table definition.'\
+                          '\'%s\' table definition.' \
                           % table['tableId']
                 raise UserException(message)
 
@@ -153,7 +168,7 @@ class App:
                 table['tableId']
             )
             incremental = \
-                'incremental' in table.keys()\
+                'incremental' in table.keys() \
                 and table['incremental'] is True
             csv_file_path = '%s/in/tables/%s' % (
                 self.data_dir,
