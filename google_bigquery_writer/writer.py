@@ -141,13 +141,12 @@ class Writer(object):
                 os.remove(csv_file_path)
 
                 all_files = os.listdir(self.TEMP_PATH)
+
+                futures = set()
                 with ThreadPoolExecutor(max_workers=self.MAX_WORKERS) as executor:
                     for file in all_files:
                         file_path = os.path.join(self.TEMP_PATH, file)
-
-                        futures = {
-                            executor.submit(self._write_table, file_path, table_reference, 0)
-                        }
+                        futures.add(executor.submit(self._write_table, file_path, table_reference, 0))
 
                     for future in as_completed(futures):
                         jobs.append(future.result())
@@ -218,7 +217,7 @@ class Writer(object):
                 message = 'Loading data into table %s.%s failed: %s' % (
                     dataset_name,
                     table_definition['dbName'],
-                    job.errorResult
+                    job.error_result
                 )
                 raise UserException(message)
 
