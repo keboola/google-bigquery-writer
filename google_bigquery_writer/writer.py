@@ -1,3 +1,5 @@
+import logging
+
 from requests import exceptions as req_exceptions
 from google.cloud import bigquery, exceptions as bq_exceptions
 from typing import List
@@ -163,7 +165,7 @@ class Writer(object):
                            bq_exceptions.ClientError, bq_exceptions.ServerError),
                           max_tries=5)
     def _write_table(self, csv_file_path: str, table_reference, skip: int):
-        print(f"Uploading data {csv_file_path} to BigQuery job")
+        logging.debug(f"Uploading data {csv_file_path} to BigQuery job")
         with open(csv_file_path, 'rb') as readable:
             job_config = bigquery.LoadJobConfig()
             job_config.source_format = 'CSV'
@@ -175,7 +177,7 @@ class Writer(object):
                 table_reference,
                 job_config=job_config
             )
-            print(f"Created BigQuery job {job.job_id}")
+            logging.debug(f"Created BigQuery job {job.job_id}")
             return job
 
     def write_table_sync(self, csv_file_path: str, dataset_name: str, table_definition: dict, incremental: bool = False,
@@ -194,7 +196,7 @@ class Writer(object):
                 polling_retries += 1
                 job.reload()
 
-            print(f"DEBUG: Job {job.job_id} in state {job.state} (polling_retries={polling_retries})")
+            logging.debug(f"Job {job.job_id} in state {job.state} (polling_retries={polling_retries})")
 
             if job.state != u'DONE':
                 message = 'Loading data into table %s.%s didn\'t finish in %s ' \
