@@ -168,7 +168,7 @@ class Writer(object):
             job_config.source_format = 'CSV'
             job_config.skip_leading_rows = skip
             job_config.allow_quoted_newlines = True
-            job_config.preserveAsciiControlCharacters = True
+            job_config.preserve_ascii_control_characters = True
 
             job = self.bigquery_client.load_table_from_file(
                 readable,
