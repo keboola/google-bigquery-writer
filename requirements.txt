@@ -4,10 +4,10 @@ certifi==2023.11.17
 charset-normalizer==2.0.12
 coverage==4.5.1
 flake8==5.0.4
-google-api-core==2.3.1
+google-api-core==2.19.1
 google-auth==2.22.0
 google-cloud-bigquery==3.2.0
-google-cloud-core==2.3.1
+google-cloud-core==2.3.0
 google-resumable-media==2.3.3
 googleapis-common-protos==1.56.3
 httplib2==0.22.0
