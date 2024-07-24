@@ -193,7 +193,6 @@ class Writer(object):
                 time.sleep(polling_delay)
                 polling_retries += 1
                 job.reload()
-
             #  print(f"Job {job.job_id} in state {job.state} (polling_retries={polling_retries})")
 
             if job.state != u'DONE':
