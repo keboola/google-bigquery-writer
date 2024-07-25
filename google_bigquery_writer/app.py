@@ -144,7 +144,7 @@ class App:
                 continue
             if 'items' not in table.keys():
                 message = 'Key \'items\' not defined in ' \
-                          '\'%s\' table definition.'\
+                          '\'%s\' table definition.' \
                           % table['tableId']
                 raise UserException(message)
 
@@ -153,7 +153,7 @@ class App:
                 table['tableId']
             )
             incremental = \
-                'incremental' in table.keys()\
+                'incremental' in table.keys() \
                 and table['incremental'] is True
             csv_file_path = '%s/in/tables/%s' % (
                 self.data_dir,
