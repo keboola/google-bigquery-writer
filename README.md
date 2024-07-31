@@ -120,6 +120,7 @@ This app requires 2 sets of service account credentials - one for managing the t
     "tables": [
       {
         "dbName": "table1",
+        "chunkSize": 10000, 
         "tableId": "in.c-bucket.table1",
         "items": [
           {
