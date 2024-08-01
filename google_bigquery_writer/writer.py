@@ -1,3 +1,5 @@
+import logging
+
 from requests import exceptions as req_exceptions
 from google.cloud import bigquery, exceptions as bq_exceptions
 from typing import List
@@ -19,7 +21,7 @@ import time
 
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
-    MAX_CHUNK_SIZE_MB = 1_000
+    DEFAULT_CHUNK_SIZE_MB = 1_000
     MAX_WORKERS = 5  # https://cloud.google.com/bigquery/quotas#standard_tables
     TEMP_PATH = '/home/data/temp'
 
@@ -102,8 +104,14 @@ class Writer(object):
     def write_table(self, csv_file_path: str, dataset_name: str, table_definition: dict, incremental: bool = False) \
             -> List[bigquery.LoadJob]:
 
+        chunk_size = table_definition.get('chunkSize')
+        if not chunk_size:
+            chunk_size = self.DEFAULT_CHUNK_SIZE_MB
+            logging.info('Chunk size not specified, using default value: %s' % self.DEFAULT_CHUNK_SIZE_MB)
+
         if dataset_name == '' or dataset_name is None:
             raise UserException('Dataset name not specified.')
+
         if table_definition['dbName'] == '' \
                 or table_definition['dbName'] is None:
             raise UserException('Table name not specified.')
@@ -132,9 +140,9 @@ class Writer(object):
 
         jobs = []
         try:
-            if size_mb > self.MAX_CHUNK_SIZE_MB:
-                nr_of_slices = self._calculate_slices(size_mb, self.MAX_CHUNK_SIZE_MB)
-                print(f"File will be split into {nr_of_slices} chunks because it exceeds the {self.MAX_CHUNK_SIZE_MB}"
+            if size_mb > chunk_size:
+                nr_of_slices = self._calculate_slices(size_mb, chunk_size)
+                print(f"File will be split into {nr_of_slices} chunks because it exceeds the {chunk_size}"
                       f"MB file limit - file size: {size_mb}MB")
                 os.makedirs(self.TEMP_PATH, exist_ok=True)
                 self._split_csv(csv_file_path, table_definition['dbName'], nr_of_slices=nr_of_slices)
