@@ -8,6 +8,7 @@ from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
 from google.api_core.exceptions import BadRequest
 from google.cloud.bigquery.dataset import DatasetReference
+from google.cloud.bigquery.table import TimePartitioning, RangePartitioning, PartitionRange
 
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
@@ -63,12 +64,33 @@ class Writer(object):
     def prepare_table(
             self,
             dataset: bigquery.Dataset,
-            table_name: str,
+            table_definition: dict,
             columns_schema: list,
             incremental: bool
     ) -> bigquery.TableReference:
-        table_reference = dataset.table(table_name)
+        table_reference = dataset.table(table_definition['dbName'])
         table = bigquery.Table(table_reference, columns_schema)
+
+        if table_definition.get("partitioning") == "time":
+            partitioning = TimePartitioning(
+                type_=table_definition.get("partitioning_granularity"),
+                field=table_definition.get("partitioning_column"),
+                expiration_ms=table_definition.get("partition_expiration_ms"),
+            )
+            table.time_partitioning = partitioning
+            table.require_partition_filter = table_definition.get("require_partition_filter")
+
+        if table_definition.get("partitioning") == "range":
+            partitioning = RangePartitioning(
+                range_=PartitionRange(
+                    start=table_definition.get("partitioning_range_start"),
+                    end=table_definition.get("partitioning_range_end"),
+                    interval=table_definition.get("partitioning_range_interval"),
+                ),
+                field=table_definition.get("partitioning_column"),
+            )
+            table.range_partitioning = partitioning
+            table.require_partition_filter = table_definition.get("require_partition_filter")
 
         try:
             bq_table = self.bigquery_client.get_table(table_reference, timeout=self.REQUEST_TIMEOUT)
@@ -95,7 +117,7 @@ class Writer(object):
                 self.bigquery_client.create_table(table, timeout=self.REQUEST_TIMEOUT)
             except bq_exceptions.BadRequest as err:
                 message = 'Cannot create table %s: %s' % (
-                    table_name,
+                    table_definition['dbName'],
                     str(err)
                 )
                 raise UserException(message)
@@ -131,7 +153,7 @@ class Writer(object):
         dataset = self.obtain_dataset(dataset_name)
         table_reference = self.prepare_table(
             dataset,
-            table_definition['dbName'],
+            table_definition,
             columns_schema,
             incremental
         )

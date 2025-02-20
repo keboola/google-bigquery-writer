@@ -121,7 +121,12 @@ This app requires 2 sets of service account credentials - one for managing the t
       {
         "dbName": "table1",
         "chunkSize": 10000, 
-        "tableId": "in.c-bucket.table1",
+        "tableId": "in.c-bucket.table1", 
+        "partitioning": "time",
+        "partitioning_granularity": "DAY",
+        "partitioning_column": "id",
+        "partition_expiration_ms": 7776000000,
+        "require_partition_filter": true,
         "items": [
           {
             "name": "string",
