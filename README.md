@@ -124,9 +124,11 @@ This app requires 2 sets of service account credentials - one for managing the t
         "tableId": "in.c-bucket.table1", 
         "partitioning": "time",
         "partitioning_granularity": "DAY",
-        "partitioning_column": "id",
+        "partitioning_column": "timestamp",
         "partition_expiration_ms": 7776000000,
         "require_partition_filter": true,
+        "clustering": true,
+        "clustering_columns": ["category", "category2"],
         "items": [
           {
             "name": "string",
@@ -152,6 +154,16 @@ This app requires 2 sets of service account credentials - one for managing the t
             "name": "timestamp",
             "dbName": "timestamp",
             "type": "TIMESTAMP"
+          },
+          {
+            "name": "category",
+            "dbName": "category",
+            "type": "INTEGER"
+          },
+          {
+            "name": "category2",
+            "dbName": "category2",
+            "type": "STRING"
           }
         ]
       }

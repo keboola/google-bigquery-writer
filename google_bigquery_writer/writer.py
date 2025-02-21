@@ -92,6 +92,9 @@ class Writer(object):
             table.range_partitioning = partitioning
             table.require_partition_filter = table_definition.get("require_partition_filter")
 
+        if table_definition.get("clustering"):
+            table.clustering_fields = table_definition.get("clustering_columns")
+
         try:
             bq_table = self.bigquery_client.get_table(table_reference, timeout=self.REQUEST_TIMEOUT)
             table_exist = True
