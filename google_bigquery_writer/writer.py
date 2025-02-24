@@ -71,26 +71,27 @@ class Writer(object):
         table_reference = dataset.table(table_definition['dbName'])
         table = bigquery.Table(table_reference, columns_schema)
 
-        if table_definition.get("partitioning") == "time":
-            partitioning = TimePartitioning(
-                type_=table_definition.get("partitioning_granularity"),
-                field=table_definition.get("partitioning_column"),
-                expiration_ms=table_definition.get("partition_expiration_ms"),
-            )
-            table.time_partitioning = partitioning
-            table.require_partition_filter = table_definition.get("require_partition_filter")
+        match table_definition.get("partitioning"):
+            case "time":
+                partitioning = TimePartitioning(
+                    type_=table_definition.get("partitioning_granularity"),
+                    field=table_definition.get("partitioning_column"),
+                    expiration_ms=table_definition.get("partition_expiration_ms"),
+                )
+                table.time_partitioning = partitioning
+                table.require_partition_filter = table_definition.get("require_partition_filter")
 
-        if table_definition.get("partitioning") == "range":
-            partitioning = RangePartitioning(
-                range_=PartitionRange(
-                    start=table_definition.get("partitioning_range_start"),
-                    end=table_definition.get("partitioning_range_end"),
-                    interval=table_definition.get("partitioning_range_interval"),
-                ),
-                field=table_definition.get("partitioning_column"),
-            )
-            table.range_partitioning = partitioning
-            table.require_partition_filter = table_definition.get("require_partition_filter")
+            case "range":
+                partitioning = RangePartitioning(
+                    range_=PartitionRange(
+                        start=table_definition.get("partitioning_range_start"),
+                        end=table_definition.get("partitioning_range_end"),
+                        interval=table_definition.get("partitioning_range_interval"),
+                    ),
+                    field=table_definition.get("partitioning_column"),
+                )
+                table.range_partitioning = partitioning
+                table.require_partition_filter = table_definition.get("require_partition_filter")
 
         if table_definition.get("clustering"):
             table.clustering_fields = table_definition.get("clustering_columns")
