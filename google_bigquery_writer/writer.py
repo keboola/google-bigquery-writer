@@ -93,6 +93,12 @@ class Writer(object):
                 table.range_partitioning = partitioning
                 table.require_partition_filter = table_definition.get("require_partition_filter")
 
+            case None | "":
+                pass
+
+            case _:
+                raise UserException(f"Unsupported partitioning type: {table_definition.get('partitioning')}")
+
         if table_definition.get("clustering"):
             table.clustering_fields = table_definition.get("clustering_columns")
 
