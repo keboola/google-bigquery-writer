@@ -24,7 +24,7 @@ class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
     DEFAULT_CHUNK_SIZE_MB = 1_000
     MAX_WORKERS = 5  # https://cloud.google.com/bigquery/quotas#standard_tables
-    TEMP_PATH = '/home/data/temp'
+    TEMP_PATH = '/tmp/data'
 
     def __init__(self, bigquery_client: bigquery.Client):
         self.bigquery_client = bigquery_client
