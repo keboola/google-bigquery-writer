@@ -6,7 +6,7 @@ from typing import List
 
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
-from google.api_core.exceptions import BadRequest
+from google.api_core.exceptions import BadRequest, TooManyRequests
 from google.cloud.bigquery.dataset import DatasetReference
 from google.cloud.bigquery.table import TimePartitioning, RangePartitioning, PartitionRange
 
@@ -193,14 +193,15 @@ class Writer(object):
             else:
                 jobs.append(self._write_table(csv_file_path, table_reference, 1))
         except (ConnectionError, req_exceptions.RequestException, bq_exceptions.ClientError,
-                bq_exceptions.ServerError) as e:
+                bq_exceptions.ServerError, TooManyRequests) as e:
             raise UserException(f"Loading data into table {dataset_name}.{table_definition['dbName']} failed: {e}")
 
         return jobs
 
     @backoff.on_exception(backoff.expo,
                           (ConnectionError, req_exceptions.RequestException,
-                           bq_exceptions.ClientError, bq_exceptions.ServerError),
+                           bq_exceptions.ClientError, bq_exceptions.ServerError,
+                           TooManyRequests),
                           max_tries=5)
     def _write_table(self, csv_file_path: str, table_reference, skip: int):
         with open(csv_file_path, 'rb') as readable:
@@ -217,6 +218,7 @@ class Writer(object):
             )
             return job
 
+    @backoff.on_exception(backoff.expo, TooManyRequests, max_tries=5)
     def write_table_sync(self, csv_file_path: str, dataset_name: str, table_definition: dict, incremental: bool = False,
                          polling_max_retries: int = 360, polling_delay: int = 5) -> None:
         jobs = self.write_table(
