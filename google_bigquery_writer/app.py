@@ -1,4 +1,4 @@
-from keboola import docker
+from keboola.component import Configuration
 from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
 import google.api_core
@@ -15,12 +15,12 @@ from google.oauth2 import service_account
 class App:
     def __init__(self):
         self.data_dir = os.environ.get('KBC_DATADIR')
-        self.cfg = docker.Config(self.data_dir)
+        self.cfg = Configuration(self.data_dir)
         self.writer = None
 
     def validate_credentials(self):
-        parameters = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
-                      or self.cfg.get_parameters().get('service_account'))
+        parameters = (self.cfg.image_parameters.get('service_account')
+                      or self.cfg.parameters.get('service_account'))
 
         if not parameters:
             raise UserException('Authorization missing.')
@@ -42,8 +42,8 @@ class App:
             raise UserException('Service account project id missing.')
 
     def get_credentials(self):
-        credentials_json = (self.cfg.config_data.get('image_parameters', {}).get('service_account')
-                            or self.cfg.get_parameters().get('service_account'))
+        credentials_json = (self.cfg.image_parameters.get('service_account')
+                            or self.cfg.parameters.get('service_account'))
 
         private_key = credentials_json.get('#private_key')
         client_email = credentials_json.get('client_email')
@@ -77,18 +77,18 @@ class App:
         if self.writer:
             return self.writer
 
-        config_data_service_account = self.cfg.config_data.get('image_parameters', {}).get('service_account', {})
-        parameters_service_account = self.cfg.get_parameters().get('service_account')
+        config_data_service_account = self.cfg.image_parameters.get('service_account', {})
+        parameters_service_account = self.cfg.parameters.get('service_account')
 
         project = (
-                self.cfg.get_parameters().get('project', None) or
+                self.cfg.parameters.get('project', None) or
                 config_data_service_account.get('project_id', None) or
                 parameters_service_account.get('project_id'))
 
         bigquery_client_factory = BigqueryClientFactory(
             project,
             self.get_credentials(),
-            location=self.cfg.get_parameters().get('location', None)
+            location=self.cfg.parameters.get('location', None)
         )
 
         bigquery_client = bigquery_client_factory.create()
@@ -98,7 +98,7 @@ class App:
     def run(self):
         action = self.cfg.get_action()
 
-        parameters = self.cfg.get_parameters()
+        parameters = self.cfg.parameters
         if len(parameters) == 0:
             message = 'Configuration is empty.'
             raise UserException(message)
@@ -110,12 +110,12 @@ class App:
             raise UserException(message)
 
         if (
-                not self.cfg.get_parameters().get('project') and
+                not self.cfg.parameters.get('project') and
                 (
-                        not self.cfg.get_parameters().get('service_account') or
-                        not self.cfg.get_parameters().get('service_account').get('project_id')
+                        not self.cfg.parameters.get('service_account') or
+                        not self.cfg.parameters.get('service_account').get('project_id')
                 ) and
-                not self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
+                not self.cfg.image_parameters.get('service_account', {}).get('project_id')
         ):
             message = 'Google BigQuery project not specified in the configuration.'
             raise UserException(message)
@@ -130,7 +130,7 @@ class App:
 
     def action_run(self):
         # validate application parameters
-        parameters = self.cfg.get_parameters()
+        parameters = self.cfg.parameters
         # check for empty tables
         if isinstance(parameters, list):
             raise UserException('There are no tables specified in the configuration.')

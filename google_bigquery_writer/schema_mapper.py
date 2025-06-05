@@ -1,7 +1,7 @@
 from google.cloud import bigquery
 from google.cloud.bigquery.schema import SchemaField
 from google_bigquery_writer.exceptions import UserException
-from keboola import docker
+from keboola.component import dao
 from os import path
 
 
@@ -18,11 +18,8 @@ def get_schema(table_definition: dict) -> list:
 
 
 def get_csv_schema(file_path: str) -> list:
-    data_dir = path.realpath(path.join(
-        path.dirname(file_path),
-        '../..'
-    )) + path.sep
-    return docker.Config(data_dir).get_file_manifest(file_path)['columns']
+    table_definition = dao.TableDefinition.build_from_manifest(file_path.removesuffix('.csv') + '.csv.manifest')
+    return table_definition.columns
 
 
 def get_input_table_mapping(input_tables_mapping: list, table_id: str) -> dict:
