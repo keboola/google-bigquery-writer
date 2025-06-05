@@ -19,6 +19,8 @@ import os
 import subprocess
 import time
 
+logging.getLogger('backoff').addHandler(logging.StreamHandler())
+
 
 class Writer(object):
     REQUEST_TIMEOUT = 120  # Timeout in seconds
