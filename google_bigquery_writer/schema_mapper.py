@@ -2,7 +2,6 @@ from google.cloud import bigquery
 from google.cloud.bigquery.schema import SchemaField
 from google_bigquery_writer.exceptions import UserException
 from keboola.component import dao
-from os import path
 
 
 def get_schema_field(item_definition: dict) -> SchemaField:
