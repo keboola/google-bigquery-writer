@@ -78,7 +78,7 @@ class Writer(object):
                 partitioning = TimePartitioning(
                     type_=table_definition.get("partitioning_granularity"),
                     field=table_definition.get("partitioning_column"),
-                    expiration_ms=table_definition.get("partition_expiration_ms"),
+                    expiration_ms=ms if (ms := table_definition.get("partition_expiration_ms")) and ms > 0 else None,
                 )
                 table.time_partitioning = partitioning
                 table.require_partition_filter = table_definition.get("require_partition_filter")
