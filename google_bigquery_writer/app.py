@@ -3,6 +3,7 @@ from google_bigquery_writer.exceptions import UserException
 import google_bigquery_writer.writer
 import google.api_core
 from google.cloud import bigquery
+from google.cloud import bigquery_datatransfer_v1
 from google.auth.exceptions import RefreshError
 import json
 import os
@@ -105,26 +106,31 @@ class App:
 
         self.validate_credentials()
 
-        if parameters.get('dataset') is None or parameters.get('dataset') == '':
-            message = 'Google BigQuery dataset not specified in the configuration.'
-            raise UserException(message)
+        # Skip dataset and project validation for list-type actions
+        if action not in ['list', 'list_locations']:
+            if parameters.get('dataset') is None or parameters.get('dataset') == '':
+                message = 'Google BigQuery dataset not specified in the configuration.'
+                raise UserException(message)
 
-        if (
-                not self.cfg.get_parameters().get('project') and
-                (
-                        not self.cfg.get_parameters().get('service_account') or
-                        not self.cfg.get_parameters().get('service_account').get('project_id')
-                ) and
-                not self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
-        ):
-            message = 'Google BigQuery project not specified in the configuration.'
-            raise UserException(message)
+            if (
+                    not self.cfg.get_parameters().get('project') and
+                    (
+                            not self.cfg.get_parameters().get('service_account') or
+                            not self.cfg.get_parameters().get('service_account').get('project_id')
+                    ) and
+                    not self.cfg.config_data.get('image_parameters', {}).get('service_account', {}).get('project_id')
+            ):
+                message = 'Google BigQuery project not specified in the configuration.'
+                raise UserException(message)
 
         if action == 'run' or action is None or action == '':
             self.action_run()
             return
         if action == 'list':
             self.action_list()
+            return
+        if action == 'list_locations':
+            self.action_list_locations()
             return
         raise UserException('Action %s not defined' % action)
 
@@ -211,6 +217,44 @@ class App:
                         },
                         datasets
                     ))
+                })
+
+        except RefreshError:
+            message = 'Cannot connect to BigQuery.' \
+                      ' Please try reauthorizing.'
+            raise UserException(message)
+        except google.api_core.exceptions.Forbidden as err:
+            raise UserException(err.message)
+
+        print(json.dumps(response))
+
+    def action_list_locations(self):
+        config_data_service_account = self.cfg.config_data.get('image_parameters', {}).get('service_account', {})
+        parameters_service_account = self.cfg.get_parameters().get('service_account')
+
+        project_id = (
+                self.cfg.get_parameters().get('project', None) or
+                config_data_service_account.get('project_id', None) or
+                parameters_service_account.get('project_id'))
+
+        if not project_id:
+            raise UserException('Project ID is required to list locations.')
+
+        response = {
+            'locations': []
+        }
+
+        try:
+            client = bigquery_datatransfer_v1.DataTransferServiceClient(
+                credentials=self.get_credentials()
+            )
+            parent = f"projects/{project_id}"
+
+            locations_response = client.list_locations(request={"name": parent})
+            for location in locations_response.locations:
+                response['locations'].append({
+                    'id': location.location_id,
+                    'name': location.display_name
                 })
 
         except RefreshError:
