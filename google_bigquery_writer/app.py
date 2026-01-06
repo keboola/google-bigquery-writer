@@ -106,6 +106,8 @@ class App:
 
         self.validate_credentials()
 
+        raise UserException(action)
+
         # Skip dataset and project validation for list-type actions
         if action not in ['list', 'list_locations']:
             if parameters.get('dataset') is None or parameters.get('dataset') == '':
