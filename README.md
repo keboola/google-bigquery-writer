@@ -129,6 +129,7 @@ This app requires 2 sets of service account credentials - one for managing the t
         "require_partition_filter": true,
         "clustering": true,
         "clustering_columns": ["category", "category2"],
+        "propagateDescriptions": true,
         "items": [
           {
             "name": "string",
@@ -171,6 +172,8 @@ This app requires 2 sets of service account credentials - one for managing the t
   }
 }
 ```
+
+`propagateDescriptions` (default `true`) writes the Storage table description and column descriptions from the input table manifest as the BigQuery table and field descriptions after the load. Existing descriptions are never cleared; a failed update is logged as a warning.
 
 ## License
 

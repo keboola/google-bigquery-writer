@@ -1,0 +1,15 @@
+{
+    "columns": [
+        "col1",
+        "col2"
+    ],
+    "schema": [
+        {
+            "name": "col1"
+        },
+        {
+            "name": "col2",
+            "description": "Second column"
+        }
+    ]
+}

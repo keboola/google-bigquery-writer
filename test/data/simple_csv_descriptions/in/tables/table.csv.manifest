@@ -1,0 +1,16 @@
+{
+    "columns": [
+        "col1",
+        "col2"
+    ],
+    "description": "Table description",
+    "schema": [
+        {
+            "name": "col1",
+            "description": "First column"
+        },
+        {
+            "name": "col2"
+        }
+    ]
+}
