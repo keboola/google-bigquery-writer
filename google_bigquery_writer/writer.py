@@ -6,8 +6,9 @@ from typing import List
 
 from google_bigquery_writer.exceptions import UserException
 from google_bigquery_writer import schema_mapper
-from google.api_core.exceptions import BadRequest, TooManyRequests
+from google.api_core.exceptions import BadRequest, GoogleAPIError, TooManyRequests
 from google.cloud.bigquery.dataset import DatasetReference
+from google.cloud.bigquery.schema import SchemaField
 from google.cloud.bigquery.table import TimePartitioning, RangePartitioning, PartitionRange
 
 from concurrent.futures import ThreadPoolExecutor
@@ -261,6 +262,34 @@ class Writer(object):
                     job.error_result
                 )
                 raise UserException(message)
+
+        if table_definition.get('propagateDescriptions', True):
+            table_description, column_descriptions = schema_mapper.get_table_descriptions(
+                csv_file_path,
+                table_definition
+            )
+            self.apply_descriptions(dataset_name, table_definition, table_description, column_descriptions)
+
+    def apply_descriptions(self, dataset_name: str, table_definition: dict, table_description: str | None,
+                           column_descriptions: dict[str, str]) -> None:
+        if not table_description and not column_descriptions:
+            return
+
+        table_reference = DatasetReference(self.bigquery_client.project, dataset_name).table(table_definition['dbName'])
+        try:
+            table = self.bigquery_client.get_table(table_reference, timeout=self.REQUEST_TIMEOUT)
+            fields = ['schema']
+            if table_description:
+                table.description = table_description
+                fields.append('description')
+            table.schema = [
+                SchemaField.from_api_repr({**field.to_api_repr(), 'description': column_descriptions[field.name]})
+                if field.name in column_descriptions else field
+                for field in table.schema
+            ]
+            self.bigquery_client.update_table(table, fields, timeout=self.REQUEST_TIMEOUT)
+        except GoogleAPIError as err:
+            logging.warning('Cannot set descriptions on table %s.%s: %s', dataset_name, table_definition['dbName'], err)
 
     def _split_csv(self, csv_file, table_name, nr_of_slices):
         result = subprocess.run(

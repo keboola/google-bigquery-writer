@@ -163,3 +163,52 @@ class TestWriter(GoogleBigQueryWriterTest):
         assert row_data[0].col2 == 1
         assert row_data[1].col1 == 'val2'
         assert row_data[1].col2 == 2
+
+    def get_table(self):
+        client = self.get_client('service_account_manage')
+        dataset = client.get_dataset(os.environ.get('BIGQUERY_DATASET'))
+        return client.get_table(dataset.table(os.environ.get('BIGQUERY_TABLE')))
+
+    def test_write_table_sync_sets_descriptions(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv_descriptions/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            fixtures.get_table_configuration()
+        )
+
+        table = self.get_table()
+        assert table.description == 'Table description'
+        assert [field.description for field in table.schema] == ['First column', None]
+
+    def test_write_table_sync_append_keeps_existing_descriptions(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv_descriptions/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            fixtures.get_table_configuration()
+        )
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv_descriptions_partial/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            fixtures.get_table_configuration(),
+            incremental=True
+        )
+
+        table = self.get_table()
+        assert table.description == 'Table description'
+        assert [field.description for field in table.schema] == ['First column', 'Second column']
+
+    def test_write_table_sync_without_propagating_descriptions(self, data_dir):
+        my_writer = writer.Writer(self.get_client())
+        table_configuration = fixtures.get_table_configuration()
+        table_configuration['propagateDescriptions'] = False
+        my_writer.write_table_sync(
+            data_dir + 'simple_csv_descriptions/in/tables/table.csv',
+            os.environ.get('BIGQUERY_DATASET'),
+            table_configuration
+        )
+
+        table = self.get_table()
+        assert table.description is None
+        assert [field.description for field in table.schema] == [None, None]

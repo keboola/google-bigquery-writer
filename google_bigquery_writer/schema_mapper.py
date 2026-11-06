@@ -17,12 +17,34 @@ def get_schema(table_definition: dict) -> list:
     return list(map(get_schema_field, table_definition['items']))
 
 
-def get_csv_schema(file_path: str) -> list:
+def get_csv_manifest(file_path: str) -> dict:
     data_dir = path.realpath(path.join(
         path.dirname(file_path),
         '../..'
     )) + path.sep
-    return docker.Config(data_dir).get_file_manifest(file_path)['columns']
+    return docker.Config(data_dir).get_file_manifest(file_path)
+
+
+def get_csv_schema(file_path: str) -> list:
+    return get_csv_manifest(file_path)['columns']
+
+
+def _non_empty_string(value) -> str | None:
+    return value if isinstance(value, str) and value != '' else None
+
+
+def get_table_descriptions(file_path: str, table_definition: dict) -> tuple[str | None, dict[str, str]]:
+    manifest = get_csv_manifest(file_path)
+    db_names = {item['name']: item['dbName'] for item in table_definition['items']}
+
+    column_descriptions = {}
+    for column in manifest.get('schema', []):
+        db_name = db_names.get(column.get('name'))
+        description = _non_empty_string(column.get('description'))
+        if db_name is not None and description is not None:
+            column_descriptions[db_name] = description
+
+    return _non_empty_string(manifest.get('description')), column_descriptions
 
 
 def get_input_table_mapping(input_tables_mapping: list, table_id: str) -> dict:

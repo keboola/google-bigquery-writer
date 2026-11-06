@@ -1,3 +1,4 @@
+import json
 import pytest
 from google_bigquery_writer import schema_mapper, exceptions
 from google.cloud import bigquery
@@ -94,3 +95,75 @@ class TestSchema(object):
             assert str(err) == "Column order mismatch. " \
                                "Actual configuration: col1, col2. " \
                                "Expected csv: col2, col1."
+
+
+def _write_manifest(data_dir, manifest: dict) -> str:
+    tables_dir = data_dir / 'in' / 'tables'
+    tables_dir.mkdir(parents=True)
+    (data_dir / 'config.json').write_text('{}')
+    (tables_dir / 'table.csv.manifest').write_text(json.dumps(manifest))
+    return str(tables_dir / 'table.csv')
+
+
+class TestTableDescriptions(object):
+    table_definition = {
+        'items': [
+            {'name': 'col1', 'dbName': 'col1', 'type': 'STRING'},
+            {'name': 'col2', 'dbName': 'renamed_col2', 'type': 'INTEGER'},
+        ]
+    }
+
+    def test_manifest_without_descriptions(self, tmp_path):
+        file_path = _write_manifest(tmp_path, {'columns': ['col1', 'col2']})
+
+        assert schema_mapper.get_table_descriptions(file_path, self.table_definition) == (None, {})
+
+    def test_empty_descriptions_are_ignored(self, tmp_path):
+        file_path = _write_manifest(tmp_path, {
+            'columns': ['col1', 'col2'],
+            'description': '',
+            'schema': [
+                {'name': 'col1', 'description': ''},
+                {'name': 'col2'},
+            ],
+        })
+
+        assert schema_mapper.get_table_descriptions(file_path, self.table_definition) == (None, {})
+
+    def test_columns_are_keyed_by_db_name(self, tmp_path):
+        file_path = _write_manifest(tmp_path, {
+            'columns': ['col1', 'col2'],
+            'description': 'Table description',
+            'schema': [
+                {'name': 'col1', 'description': 'First column', 'data_type': {}},
+                {'name': 'col2', 'description': 'Second column', 'nullable': True},
+            ],
+        })
+
+        assert schema_mapper.get_table_descriptions(file_path, self.table_definition) == (
+            'Table description',
+            {'col1': 'First column', 'renamed_col2': 'Second column'},
+        )
+
+    def test_schema_column_not_in_items_is_skipped(self, tmp_path):
+        file_path = _write_manifest(tmp_path, {
+            'columns': ['col1', 'col2', 'col3'],
+            'schema': [
+                {'name': 'col1', 'description': 'First column'},
+                {'name': 'col3', 'description': 'Not mapped'},
+            ],
+        })
+
+        assert schema_mapper.get_table_descriptions(file_path, self.table_definition) == (
+            None,
+            {'col1': 'First column'},
+        )
+
+    def test_table_description_only(self, tmp_path):
+        file_path = _write_manifest(tmp_path, {
+            'columns': ['col1', 'col2'],
+            'description': 'Table description',
+            'schema': [{'name': 'col1'}, {'name': 'col2'}],
+        })
+
+        assert schema_mapper.get_table_descriptions(file_path, self.table_definition) == ('Table description', {})
